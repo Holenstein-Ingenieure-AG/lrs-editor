@@ -4,4 +4,4 @@ The plugin consists of a complete toolset for building and managing Linear Refer
 
 ![diagramm_metrierung](https://user-images.githubusercontent.com/123003855/225064000-88892f7b-6f10-470c-b137-81821ad33c2c.png)
 
-Tested and used up to now with Swiss Coordinate Reference System. Detailed manual is available in german under [documentation](https://github.com/Holenstein-Ingenieure-AG/lrs-editor/tree/main/documentation).
+Tested and used up to now with Swiss Coordinate Reference System. Detailed manual is available in german under [manual](https://github.com/Holenstein-Ingenieure-AG/lrs-editor/tree/main/manual).
