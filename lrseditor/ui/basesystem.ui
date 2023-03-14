@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>dl_basesystem</class>
+ <widget class="QDialog" name="dl_basesystem">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>519</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Base System Settings</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout_6">
+   <item row="0" column="0" colspan="2">
+    <widget class="QGroupBox" name="gbox_basesystem">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_project_name">
+        <property name="text">
+         <string>Project Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cbx_project_name"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lbl_basesystem_name">
+        <property name="text">
+         <string>Base System Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="le_basesystem_name">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="echoMode">
+         <enum>QLineEdit::Normal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="lbl_tolerance">
+        <property name="text">
+         <string>Tolerance</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="dsb_tolerance">
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.001000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QGroupBox" name="gbox_classes">
+     <property name="title">
+      <string>Base System</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_5">
+      <item row="0" column="0" colspan="2">
+       <layout class="QFormLayout" name="formLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_conn_name">
+          <property name="text">
+           <string>Connection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="cbx_conn_name"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="pb_conn">
+          <property name="toolTip">
+           <string>Open Database Connections...</string>
+          </property>
+          <property name="text">
+           <string>Choose...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Base Class</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lbl_base_class_name">
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cbx_base_class_name"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="lbl_base_geom">
+           <property name="text">
+            <string>Geometry Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="cbx_base_geom"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="lbl_base_route_id">
+           <property name="text">
+            <string>Route ID Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="cbx_base_route_id"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Point Class</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lbl_point_class_name">
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cbx_point_class_name"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="lbl_point_geom">
+           <property name="text">
+            <string>Geometry Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="cbx_point_geom"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="lbl_point_route_id">
+           <property name="text">
+            <string>Route ID Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="cbx_point_route_id"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="lbl_point_sortnr">
+           <property name="text">
+            <string>Sort Number Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="cbx_point_sortnr"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="lbl_point_type">
+           <property name="text">
+            <string>Point Type Field</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="cbx_point_type"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Apply|QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>cbx_project_name</tabstop>
+  <tabstop>le_basesystem_name</tabstop>
+  <tabstop>dsb_tolerance</tabstop>
+  <tabstop>cbx_conn_name</tabstop>
+  <tabstop>pb_conn</tabstop>
+  <tabstop>cbx_base_class_name</tabstop>
+  <tabstop>cbx_base_geom</tabstop>
+  <tabstop>cbx_base_route_id</tabstop>
+  <tabstop>cbx_point_class_name</tabstop>
+  <tabstop>cbx_point_geom</tabstop>
+  <tabstop>cbx_point_route_id</tabstop>
+  <tabstop>cbx_point_sortnr</tabstop>
+  <tabstop>cbx_point_type</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>dl_basesystem</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>357</x>
+     <y>346</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>dl_basesystem</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>390</x>
+     <y>346</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

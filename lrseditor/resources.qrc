@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/plugins/lrseditor" >
+		<file>icons/lrseditor_event_move.png</file>
+		<file>icons/lrseditor_event_dig.png</file>
+		<file>icons/lrseditor_event_delete.png</file>
+		<file>icons/lrseditor_event_names.png</file>
+		<file>icons/lrseditor_route_upd.png</file>
+		<file>icons/lrseditor_event_appr.png</file>		
+    </qresource>
+</RCC>

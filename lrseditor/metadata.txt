@@ -1,0 +1,42 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.
+
+# Mandatory items:
+
+[general]
+name=LRS-Editor
+qgisMinimumVersion=3.22
+qgisMaximumVersion=3.99
+description=Editor for Linear Referencing Systems
+version=1.3.0
+author=Holenstein Ingenieure AG
+email=reto.meier@h-ing.ch
+
+about=The plugin consists of a complete toolset for building and managing Linear Referencing Systems. It adds functionality for creating and editing Point-, Tour- and Continuous (linear) Events referencing any network of linear features. Measures and route ID are managed dynamically, external data can be imported, data checks are included and Tour- and Continuous Events are additionally represented in a separate line layer. Data is stored in a PostGIS database.
+
+tracker=https://github.com/Holenstein-Ingenieure-AG/lrs-editor/issues
+repository=https://github.com/Holenstein-Ingenieure-AG/lrs-editor
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=linear referencing system, lrs, linear referencing, dynamic segmentation, network, postgis, vector, python
+
+homepage=https://github.com/Holenstein-Ingenieure-AG/lrs-editor
+category=Plugins
+icon=icons\lrseditor_plugin.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
