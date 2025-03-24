@@ -7,77 +7,53 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>141</height>
+    <height>191</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Create Point Class</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
+  <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
-    <widget class="QLabel" name="lbl_point_class_name">
-     <property name="text">
-      <string>Point Class Name</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="le_point_class_name">
-     <property name="text">
-      <string>tmpclass</string>
-     </property>
-     <property name="echoMode">
-      <enum>QLineEdit::Normal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="lbl_tolerance">
-     <property name="text">
-      <string>Tolerance</string>
-     </property>
-    </widget>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="1" column="0">
+      <widget class="QLabel" name="lbl_tolerance">
+       <property name="text">
+        <string>Tolerance</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lbl_class_name">
+       <property name="text">
+        <string>Line Class</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lbl_point_class_name">
+       <property name="text">
+        <string>Point Class Name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="lbl_geom">
+       <property name="text">
+        <string>Geometry Field</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="lbl_conn_name">
+       <property name="text">
+        <string>Connection</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="1" column="1">
-    <widget class="QDoubleSpinBox" name="dsb_tolerance">
-     <property name="specialValueText">
-      <string/>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.001000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.001000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="lbl_class_name">
-     <property name="text">
-      <string>Line Class</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QComboBox" name="cbx_class_name"/>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="lbl_geom">
-     <property name="text">
-      <string>Geometry Field</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QComboBox" name="cbx_geom"/>
-   </item>
-   <item row="4" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -87,11 +63,65 @@
      </property>
     </widget>
    </item>
+   <item row="0" column="1">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0" colspan="2">
+      <widget class="QLineEdit" name="le_point_class_name">
+       <property name="text">
+        <string>tmpclass</string>
+       </property>
+       <property name="echoMode">
+        <enum>QLineEdit::Normal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QComboBox" name="cbx_conn_name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="pb_conn">
+       <property name="toolTip">
+        <string>Open Database Connections...</string>
+       </property>
+       <property name="text">
+        <string>Choose...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QComboBox" name="cbx_class_name"/>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QComboBox" name="cbx_geom"/>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsb_tolerance">
+       <property name="specialValueText">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.001000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.001000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>le_point_class_name</tabstop>
   <tabstop>dsb_tolerance</tabstop>
+  <tabstop>cbx_conn_name</tabstop>
+  <tabstop>pb_conn</tabstop>
   <tabstop>cbx_class_name</tabstop>
   <tabstop>cbx_geom</tabstop>
  </tabstops>
