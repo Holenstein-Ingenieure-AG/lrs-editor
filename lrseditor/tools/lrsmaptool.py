@@ -39,9 +39,10 @@ class LRSMapTool(LRSTool, QgsMapTool):
         self.snappoint = None
 
     def canvasReleaseEvent(self, mouse_event):
+        if self.iface.activeLayer() is None:
+            return
         event_class_name = qgis_utils.tablename_by_layername_get(self.schema, self.iface.activeLayer().name)
         event_class_type = self.lrs_event_classes.event_class_type_get(event_class_name)
-
         snapped = self.snapped(mouse_event)
         if snapped:
             point = self.snappoint

@@ -18,7 +18,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QApplication, QInputDialog, QLineEdit
+from qgis.PyQt.QtWidgets import QApplication, QInputDialog, QLineEdit, QMessageBox
 
 from ..utils import qgis_utils
 from ..utils.tourmarker import Tourmarker
@@ -134,6 +134,16 @@ class LRSDigiTool(LRSMapTool):
 
                 qgis_point_fi = self.tourmarker.point_get()
 
+                meas_fi = self.route_class.point_meas_get(route_id_fi, qgis_point_fi, self.lrs_project.srid,
+                                                          sortnr_fi)[1]
+                meas_se = self.route_class.point_meas_get(route_id_se, self.point, self.lrs_project.srid,
+                                                          sortnr_se)[1]
+
+                if abs(meas_fi - meas_se) <= self.lrs_project.tolerance:
+                    # event at an existing event position
+                    self.message_show("An Event already exists at this position.", 2)
+                    return
+
                 event_id = tour_event_names.event_id_get(event_name)
                 event_uuid = tour_event_names.event_uuid_get(event_id)
 
@@ -206,7 +216,12 @@ class LRSDigiTool(LRSMapTool):
                     self.route_class.selection_remove()
                     return
             # add new event name
-            event_id = self.lrs_layer.event_name_add(name_new)
+            try:
+                event_id = self.lrs_layer.event_name_add(name_new)
+            except Exception as error:
+                # insertion error, e.g. user-defined not-null-fields
+                msg = QMessageBox(QMessageBox.Critical, "New Event Name", str(error), QMessageBox.Ok)
+                msg.exec_()
 
         if event_id is None:
             self.route_class.selection_remove()

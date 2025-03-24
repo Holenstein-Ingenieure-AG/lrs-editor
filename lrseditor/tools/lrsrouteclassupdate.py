@@ -63,7 +63,13 @@ class LRSRouteClassUpdate(LRSTool):
             self.iface.messageBar().pushWarning("No LRS Base System", "No LRS Base System defined.")
             return
 
-        logfile = LogFile(self.lrs_project.logfile_path)
+        try:
+            logfile = LogFile(self.lrs_project.logfile_path)
+        except Exception as error:
+            msg = QMessageBox(QMessageBox.Critical, "Open Log File", str(error), QMessageBox.Ok)
+            msg.exec_()
+            return
+
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # check data of basesystem
@@ -131,6 +137,7 @@ class LRSRouteClassUpdate(LRSTool):
                             lrs_layer = LRSTourEventClass(self.pg_conn, self.schema, layer)
                             lrs_layer.events_sql_delete(route[1])
                         self.route_class.route_delete(route[0])
+                        logfile.write("Route " + route[0] + ": Route with events deleted", "INFORM")
 
         logfile.close()
         QApplication.restoreOverrideCursor()

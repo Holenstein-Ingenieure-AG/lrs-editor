@@ -68,7 +68,7 @@ class LRSDeleteTool(LRSMapTool):
         # must be before any other dialog
         modifiers = QApplication.keyboardModifiers()
 
-        if events_count > 1:
+        if events_count >= 1:
             uuiddict = {}
             event_names_multiple = []
             id_list = []
@@ -88,8 +88,6 @@ class LRSDeleteTool(LRSMapTool):
                 self.lrs_layer.selection_remove()
                 return
             uuid = uuiddict[feat_id]
-        elif events_count == 1:
-            uuid = values[0][1]
         else:
             return
 

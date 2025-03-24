@@ -21,6 +21,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
 
 from ..utils import qgis_utils
+from ..utils.tourmarker import Tourmarker
 from ..tools.lrsmaptool import LRSMapTool
 from ..cls.lrsconteventclass import LRSContEventClass
 from ..cls.lrseventnamesclass import LRSEventNamesClass
@@ -48,6 +49,7 @@ class LRSMoveTool(LRSMapTool):
         self.eventnamesdockwidget = eventnamesdockwidget
         self.eventnamesdockwidget.listwidget_clicked.connect(self.event_name_changed)
 
+        self.tourmarker = None
         self.feat_id = None
         self.feat_uuid = None
 
@@ -70,38 +72,113 @@ class LRSMoveTool(LRSMapTool):
             return
 
         self.lrs_layer = LRSTourEventClass(self.pg_conn, self.schema, self.iface.activeLayer())
+        self.tourmarker = Tourmarker(self.iface)
+        datalist = self.tourmarker.datalist_get()
         if self.lrs_layer.selection_count_get() == 0:
-            self.feat_id = None
-            self.feat_uuid = None
-            # select Event Point
-            events_count = self.lrs_layer.select_by_rect(self.rect, "set")
-            values = self.lrs_layer.selection_values_get(["id", "uuid"])
-            if events_count > 1:
-                uuiddict = {}
-                event_names_multiple = []
-                id_list = []
-                for value in values:
-                    event_name_list = self.lrs_layer.event_name_get(value[1])
-                    if event_name_list is None:
+            # select new event point
+
+            # must be before any other dialog
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers == Qt.ShiftModifier:
+                # append tour part, prepare and append
+                if not self.route_select():
+                    self.tool_reset()
+                    return
+                valuelist = self.route_class.selection_values_get(['route_id', 'sortnr'])
+                self.route_class.selection_remove()
+                self.tourmarker.remove()
+                if datalist is not None:
+                    route_id_fi, sortnr_fi = datalist[1], datalist[2]
+                    route_id_se, sortnr_se = valuelist[0][0], valuelist[0][1]
+                    # check for same route
+                    if (route_id_se + "-" + str(sortnr_se)) != (route_id_fi + "-" + str(sortnr_fi)):
+                        self.message_show("The endpoint of the part is not along the same route.", 3)
+                        self.tool_reset()
+                        return
+
+                    qgis_point_fi = self.tourmarker.point_get()
+                    result_fi = self.route_class.point_meas_get(route_id_fi, qgis_point_fi, self.lrs_project.srid,
+                                                                sortnr_fi)
+                    result_se = self.route_class.point_meas_get(route_id_se, self.point, self.lrs_project.srid,
+                                                                sortnr_se)
+                    meas_fi, meas_se = result_fi[1], result_se[1]
+                    direction = True
+                    if meas_fi < meas_se:
+                        frommeas = meas_fi
+                        tomeas = meas_se
+                    elif meas_fi > meas_se:
+                        frommeas = meas_se
+                        tomeas = meas_fi
+                        direction = False
+                    else:
+                        # same start- and endpoint of part
+                        self.message_show("Invalid Tour Part", 4)
+                        self.tool_reset()
+                        return
+                    # get tour events along route with selected event point
+                    events_list = self.lrs_layer.tour_meas_get(datalist[3], route_id_fi)
+                    if events_list is None:
                         self.message_show("Inconsistent data.", 4)
                         self.tool_reset()
                         return
-                    event_names_multiple.append(event_name_list[0] + " - Part " + str(event_name_list[1]))
-                    uuiddict[value[0]] = value[1]
-                    id_list.append(value[0])
+                    if len(events_list) > 0:
+                        # check for same direction on same route_id
+                        for events in events_list:
+                            routedir_old = events[8]
+                            if direction != routedir_old:
+                                self.message_show("New Tour Part in reversed direction.", 2)
+                                self.tool_reset()
+                                return
+                        # check for overlapping parts on same route_id
+                        for events in events_list:
+                            frommeas_old = events[4]
+                            tomeas_old = events[6]
 
-                self.feat_id = self.lrs_layer.selection_reselect(id_list, event_names_multiple, "Move Event",
-                                                                 "Choose an Event to move:")
-                if self.feat_id is None:
-                    self.lrs_layer.selection_remove()
-                    return
-                self.feat_uuid = uuiddict[self.feat_id]
-            elif events_count == 1:
-                self.feat_id = values[0][0]
-                self.feat_uuid = values[0][1]
+                            tol = self.lrs_project.tolerance
+                            if self.lrs_layer.overlaps_check(frommeas, frommeas_old, tomeas, tomeas_old, tol):
+                                self.message_show("Overlapping Tour Parts.", 2)
+                                self.tool_reset()
+                                return
+                    if not self.lrs_layer.event_append(datalist[3], result_fi, result_se, route_id_fi, direction):
+                        self.message_show("Inconsistent data.", 4)
+                    else:
+                        # save to get new feat_id for reselect
+                        self.layer_changes_saved()
+                self.tool_reset()
             else:
-                return
+                self.feat_id = None
+                self.feat_uuid = None
+                # select Event Point
+                events_count = self.lrs_layer.select_by_rect(self.rect, "set")
+                values = self.lrs_layer.selection_values_get(["id", "uuid"])
+                if events_count > 1:
+                    uuiddict = {}
+                    event_names_multiple = []
+                    id_list = []
+                    for value in values:
+                        event_name_list = self.lrs_layer.event_name_get(value[1])
+                        if event_name_list is None:
+                            self.message_show("Inconsistent data.", 4)
+                            self.tool_reset()
+                            return
+                        event_names_multiple.append(event_name_list[0] + " - Part " + str(event_name_list[1]))
+                        uuiddict[value[0]] = value[1]
+                        id_list.append(value[0])
+
+                    self.feat_id = self.lrs_layer.selection_reselect(id_list, event_names_multiple, "Move Event",
+                                                                     "Choose an Event to move:")
+                    if self.feat_id is None:
+                        self.lrs_layer.selection_remove()
+                        return
+                    self.feat_uuid = uuiddict[self.feat_id]
+                elif events_count == 1:
+                    self.feat_id = values[0][0]
+                    self.feat_uuid = values[0][1]
+                else:
+                    return
         else:
+            # an event point is already selected
+
             # must be before any other dialog
             modifiers = QApplication.keyboardModifiers()
 
@@ -116,47 +193,15 @@ class LRSMoveTool(LRSMapTool):
             sortnr = valuelist[0][1]
             result = self.route_class.point_meas_get(route_id, self.point, self.lrs_project.srid, sortnr)
             meas = result[1]
-
             if modifiers == Qt.ShiftModifier:
-                # append tour part
-                # get meas of first point of new part
-                feat_id = self.lrs_layer.feature_id_get("uuid", self.feat_uuid)[0]
-                feature = self.lrs_layer.feature_get_by_id(feat_id)
-                qgis_point_fi = feature.geometry().asPoint()
-                result_fi = self.route_class.point_meas_get(route_id, qgis_point_fi, self.lrs_project.srid)
-                direction = True
-                if result_fi[1] < meas:
-                    frommeas = result_fi[1]
-                    tomeas = meas
-                elif meas < result_fi[1]:
-                    tomeas = result_fi[1]
-                    frommeas = meas
-                    direction = False
-                else:
-                    self.message_show("Invalid Tour Part", 4)
-                    self.tool_reset()
-                    return
-                events_list = self.lrs_layer.tour_meas_get(self.feat_uuid, route_id)
-                if events_list is None:
-                    self.message_show("Inconsistent data.", 4)
-                    self.tool_reset()
-                    return
-                if len(events_list) > 0:
-                    # check for overlapping parts on same route_id
-                    for events in events_list:
-                        frommeas_old = events[4]
-                        tomeas_old = events[6]
-                        tol = self.lrs_project.tolerance
-
-                        if self.lrs_layer.overlaps_check(frommeas, frommeas_old, tomeas, tomeas_old, tol):
-                            self.message_show("Overlapping Tour Parts.", 2)
-                            self.tool_reset()
-                            return
-
-                if not self.lrs_layer.event_append(self.feat_uuid, result_fi, result, route_id, direction):
-                    self.message_show("Inconsistent data.", 4)
+                # append tour part, set tourmarker startpoint
+                if datalist is None:
+                    self.tourmarker.startpoint_set(self.point,[result, route_id, sortnr, self.feat_uuid])
+                    # remove selection of event point
+                    # selection of route is also removed (triggered by selection_changed)
+                    self.lrs_layer.selection_remove()
             else:
-                # move event point
+                # move event point of existing tour part
                 event_list = self.lrs_layer.event_meas_get(self.feat_uuid, route_id)
                 if event_list is None:
                     self.message_show("Inconsistent data.", 4)
@@ -179,7 +224,6 @@ class LRSMoveTool(LRSMapTool):
                 # it is not allowed to move on the other point of the same tour part
                 samemeas = event_list[4]
                 diff = abs(meas - samemeas)
-
                 if diff_min >= tol or diff_max >= tol:
                     self.message_show("An Event must be moved between existing Events.", 2)
                     self.tool_reset()
@@ -190,8 +234,8 @@ class LRSMoveTool(LRSMapTool):
                     return
                 else:
                     self.lrs_layer.event_move(self.feat_id, result[0], result[2], event_list[0], event_list[3], meas)
-
-            self.tool_reset()
+                self.tool_reset()
+        self.canvas.redrawAllLayers()
 
     def point_event_move(self):
         layer_bp = qgis_utils.layer_by_tablename_get(self.schema, self.event_class_name + "_bp")
@@ -267,9 +311,12 @@ class LRSMoveTool(LRSMapTool):
         self.lrs_layer = LRSContEventClass(self.pg_conn, self.schema, self.iface.activeLayer())
         cont_event_names = LRSEventNamesClass(self.pg_conn, self.schema, self.event_class_name, "c")
 
+
+
         if self.lrs_layer.selection_count_get() == 0:
             # select Event Point
             events_count = self.lrs_layer.select_by_rect(self.rect, "set")
+
             if events_count > 0:
                 self.feat_id = None
                 event_name = ""
@@ -433,6 +480,8 @@ class LRSMoveTool(LRSMapTool):
         self.layer_changes_accomplish(True)
         self.canvas.redrawAllLayers()
         self.tool_reset()
+        if self.tourmarker is not None:
+            self.tourmarker.remove()
         try:
             self.iface.activeLayer().afterCommitChanges.disconnect(self.layer_changes_saved)
         except TypeError:
