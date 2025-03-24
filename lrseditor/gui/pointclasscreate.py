@@ -28,7 +28,7 @@ from qgis.core import QgsProject
 from ..utils.pg_conn import PGConn
 from ..utils import qgis_utils
 from ..utils import misc_utils
-from ..cls.lrsproject import LRSProject
+from ..gui.database import DBSettings
 
 FORM_CLASS, _ = loadUiType(os.path.join(
     os.path.dirname(__file__), os.pardir, 'ui', 'pointclasscreate.ui'))
@@ -43,10 +43,13 @@ class PointClassCreate(QDialog, FORM_CLASS):
         # After self.setupUi() you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots
         self.setupUi(self)
-        self.schema = None
-        self.pg_conn = None
+        self.schema_pt = None
+        self.pg_conn_pt = None
+        self.entries = None
+        self.credentials = None
 
         # redirect buttonbox
+        self.pb_conn.clicked.connect(self.conn_choose)
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
         self.buttonBox.accepted.disconnect()
@@ -54,25 +57,10 @@ class PointClassCreate(QDialog, FORM_CLASS):
         self.pb_ok = self.buttonBox.button(QDialogButtonBox.Ok)
         self.pb_ok.setEnabled(False)
 
-        self.entries = qgis_utils.qgis_entries_get("project")
-        if self.entries is None:
-            return
-        conn_name = self.entries[0]
-        self.schema = self.entries[3]
-
-        self.credentials = qgis_utils.credentials_get(conn_name)
-        if self.credentials is None:
-            self.iface.messageBar().pushWarning("No Connection", "Missing credentials.")
-            return
-
-        self.pg_conn = PGConn(self.entries[1], self.entries[2], self.entries[4], self.credentials[0],
-                              self.credentials[1])
-        return_message = self.pg_conn.db_connect()
-        if return_message:
-            self.iface.messageBar().pushWarning("No Connection", "No connection established.")
-            return
-
-        tablelist = self.pg_conn.tablenames_geom_get(self.schema, 2)
+    def form_update(self):
+        # fill combo boxes with table names
+        # get only 2D-geom
+        tablelist = self.pg_conn_pt.tablenames_geom_get(self.schema_pt, 2)
         self.cbx_class_name.clear()
         for table in tablelist:
             if table[1].upper() == "LINESTRING":
@@ -88,33 +76,49 @@ class PointClassCreate(QDialog, FORM_CLASS):
         self.class_fields_add()
 
     def class_fields_add(self):
-        fields_geom = self.pg_conn.fieldnames_geom_get(self.schema, self.cbx_class_name.currentText())
+        fields_geom = self.pg_conn_pt.fieldnames_geom_get(self.schema_pt, self.cbx_class_name.currentText())
         self.cbx_geom.clear()
         for field_geom in fields_geom:
             self.cbx_geom.addItem(field_geom)
 
+    def conn_choose(self):
+        dlg = DBSettings(self.iface, None)
+        dlg.setWindowTitle("Database Connections")
+        dlg.gbox_settings.setTitle("Database Settings")
+        dlg.exec_()
+        if not dlg.data_get():
+            return
+        else:
+            conn_name, dbname, host, self.schema_pt, port = dlg.data_get()
+            self.entries = [conn_name, dbname, host, self.schema_pt, port]
+            self.credentials = qgis_utils.credentials_get(conn_name)
+            if self.credentials is None:
+                self.iface.messageBar().pushWarning("No Connection", "Missing credentials.")
+                return None
+            self.pg_conn_pt = PGConn(dbname, host, port, self.credentials[0], self.credentials[1])
+            return_message = self.pg_conn_pt.db_connect()
+            if return_message:
+                self.iface.messageBar().pushWarning("No Connection", "No connection established.")
+                return None
+            self.cbx_conn_name.clear()
+            self.cbx_conn_name.addItem(conn_name)
+            self.form_update()
+
     def conn_close(self):
-        if self.pg_conn:
-            self.pg_conn.db_close()
-            self.pg_conn = None
+        if self.pg_conn_pt:
+            self.pg_conn_pt.db_close()
+            self.pg_conn_pt = None
 
     def rejected(self):
         self.conn_close()
         self.reject()
 
     def accepted(self):
-        lrs_project = LRSProject(self.pg_conn, self.schema)
-        if not lrs_project:
-            msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Create LRS-Project first.",
-                              QMessageBox.Ok)
-            msg.exec_()
-            return
-
         point_class_name = self.le_point_class_name.text()
         if point_class_name == "":
             return
-        lsclassname = self.cbx_class_name.currentText()
-        if lsclassname == "":
+        linestring_class_name = self.cbx_class_name.currentText()
+        if linestring_class_name == "":
             return
 
         # check for spaces in class name
@@ -124,12 +128,12 @@ class PointClassCreate(QDialog, FORM_CLASS):
             msg.exec_()
             return
 
-        if self.pg_conn.table_exists(self.schema, point_class_name.lower()):
+        if self.pg_conn_pt.table_exists(self.schema_pt, point_class_name.lower()):
             msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class Name already exists.",
                               QMessageBox.Ok)
             msg.exec_()
             return
-        if self.pg_conn.system_table_exists(point_class_name.lower()):
+        if self.pg_conn_pt.system_table_exists(point_class_name.lower()):
             msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class Name is identical to system "
                                                                           "table name.", QMessageBox.Ok)
             msg.exec_()
@@ -138,7 +142,8 @@ class PointClassCreate(QDialog, FORM_CLASS):
         # --------------------------------
         # generate node class
 
-        nodelist = self.pg_conn.linestrings_nodes_get(self.schema, lsclassname, self.cbx_geom.currentText())
+        geom_field = self.cbx_geom.currentText()
+        nodelist = self.pg_conn_pt.linestrings_nodes_get(self.schema_pt, linestring_class_name, geom_field)
         if len(nodelist) == 0:
             msg = QMessageBox(QMessageBox.Information, "Create Point Class", "Empty Line Class.",
                               QMessageBox.Ok)
@@ -194,7 +199,8 @@ class PointClassCreate(QDialog, FORM_CLASS):
         # get the last ones
         finallist.append(self.centroid_node_get(tmplist2))
 
-        self.pg_conn.point_class_create(self.schema, point_class_name, finallist, lrs_project.srid)
+        srid = self.pg_conn_pt.srid_find(self.schema_pt, linestring_class_name, geom_field)
+        self.pg_conn_pt.point_class_create(self.schema_pt, point_class_name, finallist, srid)
 
         self.conn_close()
 
@@ -204,7 +210,7 @@ class PointClassCreate(QDialog, FORM_CLASS):
         ret = msg.exec_()
         if ret == QMessageBox.Ok:
             layer = qgis_utils.layer_create(self.entries, self.credentials, point_class_name, "geom", False,
-                                            lrs_project.srid, False)
+                                            srid, False)
             if not layer.isValid():
                 msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class failed to load!",
                                   QMessageBox.Ok)

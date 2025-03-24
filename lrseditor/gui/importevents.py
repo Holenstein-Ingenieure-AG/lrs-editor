@@ -241,7 +241,8 @@ class ImportEvents(QDialog, FORM_CLASS):
 
         layer = qgis_utils.layer_by_tablename_get(self.schema, self.event_class_name)
         if not layer:
-            self.textEdit.append("Missing layer of Event Class '" + self.event_class_name + "'. Import failed.")
+            self.textEdit.append("Missing layer of Event Class '" + self.event_class_name + "' in project. "
+                                                                                            "Import failed.")
             return
 
         if self.event_class_type == "c":
@@ -267,6 +268,14 @@ class ImportEvents(QDialog, FORM_CLASS):
             return False
         else:
             return True
+
+    def field_null_check(self, tablename, fieldname):
+        where = fieldname + " IS NULL"
+        result = self.pg_conn_ip.table_select(self.schema_ip, tablename, fieldname, where)
+        if len(result) > 0:
+            return True
+        else:
+            return False
 
     def tables_truncate(self, tables_list):
         msg = QMessageBox(QMessageBox.Question, "LRS-Editor", "Event Class '" + self.event_class_name +
@@ -295,6 +304,25 @@ class ImportEvents(QDialog, FORM_CLASS):
             self.textEdit.append("Import aborted.")
             return
 
+        # check for NULL-values
+        self.textEdit.append("...Checking NULL values...")
+        QApplication.processEvents()
+        event_name_null = self.field_null_check(self.class_name, self.event_names_field)
+        if event_name_null:
+            self.textEdit.append("There are NULL values in field '" + self.event_names_field +"'. Import aborted.")
+        route_id_null = self.field_null_check(self.class_name, self.route_id_field)
+        if route_id_null:
+            self.textEdit.append("There are NULL values in field '" + self.route_id_field +"'. Import aborted.")
+        sortnr_null = False
+        if self.sortnr_field != "<None>":
+            sortnr_null = self.field_null_check(self.class_name, self.sortnr_field)
+            if sortnr_null:
+                self.textEdit.append("There are NULL values in field '" + self.sortnr_field +"'. Import aborted.")
+        if event_name_null or route_id_null or sortnr_null:
+            QApplication.processEvents()
+            return
+
+        # truncate tables
         table_et_name = self.event_class_name + "_et"
         table_mt_name = self.event_class_name + "_mt"
         cont_count = len(self.pg_conn.table_select_group(self.schema, self.event_class_name, "COUNT(id)", "id"))
@@ -304,13 +332,13 @@ class ImportEvents(QDialog, FORM_CLASS):
                 return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.textEdit.append("...Import Event Names...")
-        QApplication.processEvents()
 
+        # insert event_names
         # get all unique event names
         event_names = self.pg_conn_ip.table_select_group(self.schema_ip, self.class_name, self.event_names_field,
                                                          self.event_names_field, None, self.event_names_field)
-        # insert event_names
+        self.textEdit.append("...Import Event Names...")
+        QApplication.processEvents()
         for event_name in event_names:
             event_names_class.event_name_add(event_name[0])
 
@@ -324,11 +352,6 @@ class ImportEvents(QDialog, FORM_CLASS):
             self.lbl_processing.setText("Processing Route: " + str(count1 + 1) + " / " + str(total_routes))
             QApplication.processEvents()
             route_name = route[0]
-            if route_name is None:
-                # no route name
-                self.textEdit.append("Route Name is NULL. Import aborted.")
-                QApplication.processEvents()
-                return
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
                 # route does not exists in routeclass
@@ -350,17 +373,19 @@ class ImportEvents(QDialog, FORM_CLASS):
                                                             fields, where, order)
             # iterate every linestring
             event_uuid_old = ""
-            toursortnr = 1
+            # toursortnr = 1
             for nodes in nodelist:
                 tour_name = nodes[4]
                 event_uuid = event_names_class.event_uuid_get(event_names_class.event_id_get(tour_name))
                 qgis_point_fi = QgsPointXY(nodes[0], nodes[1])
                 qgis_point_se = QgsPointXY(nodes[2], nodes[3])
                 if self.sortnr_field != "<None>":
-                    if event_uuid == event_uuid_old:
-                        toursortnr = toursortnr + 1
-                    else:
-                        toursortnr = 1
+                    toursortnr = int(nodes[5])
+                    # up to version 1.3.1:
+                    # if event_uuid == event_uuid_old:
+                    #     toursortnr = toursortnr + 1
+                    # else:
+                    #     toursortnr = 1
                 else:
                     if event_uuid == event_uuid_old:
                         self.textEdit.append("...Tour '" + tour_name + "' has more than one part. "
@@ -395,6 +420,20 @@ class ImportEvents(QDialog, FORM_CLASS):
             self.textEdit.append("Import aborted.")
             return
 
+        # check for NULL-values
+        self.textEdit.append("...Checking NULL values...")
+        QApplication.processEvents()
+        event_name_null = self.field_null_check(self.class_name, self.event_names_field)
+        if event_name_null:
+            self.textEdit.append("There are NULL values in field '" + self.event_names_field +"'. Import aborted.")
+        route_id_null = self.field_null_check(self.class_name, self.route_id_field)
+        if route_id_null:
+            self.textEdit.append("There are NULL values in field '" + self.route_id_field +"'. Import aborted.")
+        if event_name_null or route_id_null:
+            QApplication.processEvents()
+            return
+
+        # truncate tables
         events_count = len(self.pg_conn.table_select_group(self.schema, self.event_class_name, "COUNT(id)", "id"))
         if events_count > 0:
             if not self.tables_truncate([self.event_class_name, lrs_layer_bp.event_class_name]):
@@ -419,11 +458,6 @@ class ImportEvents(QDialog, FORM_CLASS):
             self.lbl_processing.setText("Processing Event Point: " + str(count1 + 1) + " / " + str(total_points))
             QApplication.processEvents()
             route_name = event_point[1]
-            if route_name is None:
-                # no route name
-                self.textEdit.append("Route Name is NULL. Import aborted.")
-                QApplication.processEvents()
-                return
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
                 # route does not exists in routeclass
@@ -431,17 +465,12 @@ class ImportEvents(QDialog, FORM_CLASS):
                 QApplication.processEvents()
                 continue
             event_name = event_point[0]
-            if event_name is None:
-                # no event name
-                self.textEdit.append("Event Name is NULL. Import aborted.")
-                QApplication.processEvents()
-                return
             qgis_point = QgsPoint()
             qgis_point.fromWkt(event_point[2])
             if event_name == event_name_old:
                 if route_name == route_name_old:
                     # event point with same event_name and route_name as last one
-                    self.textEdit.append("...Event Name '" + event_name + "' skipped, already references Route '"
+                    self.textEdit.append("...Event Name '" + event_name + "' skipped, already references '"
                                          + route_name + "'")
                     QApplication.processEvents()
                     continue
@@ -449,6 +478,9 @@ class ImportEvents(QDialog, FORM_CLASS):
                     # insert additional basepoint, no insert of event point
                     # geometry taken from last event point (points with more than one basepoint must overlap)
                     if qgis_point_old is not None:
+                        self.textEdit.append("...Event Name '" + event_name + "' already exists, reference added "
+                                             "with '"+ route_name + "'.")
+                        QApplication.processEvents()
                         result = self.route_class.point_meas_get(route_id, qgis_point_old, self.srid)
                         lrs_layer_bp.basepoint_sql_insert(result[0], route_id, event_uuid_old, result[1],
                                                           result[2], self.srid)
@@ -472,9 +504,23 @@ class ImportEvents(QDialog, FORM_CLASS):
             event_name_old = event_name
 
     def cont_event_import(self, layer):
+        # check for NULL-values
+        self.textEdit.append("...Checking NULL values...")
+        QApplication.processEvents()
+        event_name_null = self.field_null_check(self.class_name, self.event_names_field)
+        if event_name_null:
+            self.textEdit.append("There are NULL values in field '" + self.event_names_field +"'. Import aborted.")
+        route_id_null = self.field_null_check(self.class_name, self.route_id_field)
+        if route_id_null:
+            self.textEdit.append("There are NULL values in field '" + self.route_id_field +"'. Import aborted.")
+        if event_name_null or route_id_null:
+            QApplication.processEvents()
+            return
+
         event_names_class = LRSEventNamesClass(self.pg_conn, self.schema, self.event_class_name, "c")
         lrs_layer = LRSContEventClass(self.pg_conn, self.schema, layer)
 
+        # truncate tables
         table_et_name = self.event_class_name + "_et"
         cont_count = len(self.pg_conn.table_select_group(self.schema, self.event_class_name, "COUNT(id)", "id"))
         cont_et_count = len(self.pg_conn.table_select_group(self.schema, table_et_name, "COUNT(id)", "id"))
@@ -483,13 +529,13 @@ class ImportEvents(QDialog, FORM_CLASS):
                 return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.textEdit.append("...Import Event Names...")
-        QApplication.processEvents()
 
+        # insert n/a and event_names
         # get all unique event names
         event_names = self.pg_conn_ip.table_select_group(self.schema_ip, self.class_name, self.event_names_field,
                                                          self.event_names_field, None, self.event_names_field)
-        # insert n/a and event_names
+        self.textEdit.append("...Import Event Names...")
+        QApplication.processEvents()
         event_names_class.event_name_add("n/a")
         for event_name in event_names:
             event_names_class.event_name_add(event_name[0])
@@ -505,11 +551,6 @@ class ImportEvents(QDialog, FORM_CLASS):
             self.lbl_processing.setText("Processing Route: " + str(count1 + 1) + " / " + str(total_routes))
             QApplication.processEvents()
             route_name = route[0]
-            if route_name is None:
-                # no route name
-                self.textEdit.append("Route Name is NULL. Import aborted.")
-                QApplication.processEvents()
-                return
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
                 # route does not exists in routeclass
@@ -635,7 +676,8 @@ class ImportEvents(QDialog, FORM_CLASS):
         # keep this in an own function to start it independently
         layer = qgis_utils.layer_by_tablename_get(self.schema, self.event_class_name)
         if not layer:
-            self.textEdit.append("Missing layer of Event Class '" + self.event_class_name + "'. Import failed.")
+            self.textEdit.append("Missing layer of Event Class '" + self.event_class_name + "' in project. "
+                                                                                            "Import failed.")
             return
 
         lrs_project = LRSProject(self.pg_conn, self.schema)

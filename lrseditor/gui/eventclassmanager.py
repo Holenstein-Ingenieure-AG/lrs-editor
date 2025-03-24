@@ -29,8 +29,10 @@ from ..utils import qgis_utils
 from ..gui.importevents import ImportEvents
 from ..cls.lrsproject import LRSProject
 from ..cls.lrseventclasses import LRSEventClasses
+from ..cls.lrseventnamesclass import LRSEventNamesClass
 
 from ..gui.newevent import NewEvent
+from ..gui.tourlayermanager import TourLayerManager
 
 FORM_CLASS, _ = loadUiType(os.path.join(
     os.path.dirname(__file__), os.pardir, 'ui', 'eventclassmanager.ui'))
@@ -67,11 +69,13 @@ class EventClassManager(QDialog, FORM_CLASS):
         self.pb_add.setEnabled(False)
         self.pb_remove.setEnabled(False)
         self.pb_import.setEnabled(False)
+        self.pb_add_tour_layer.setEnabled(False)
         self.pb_delete.clicked.connect(self.event_class_delete)
         self.pb_new.clicked.connect(self.event_class_create)
         self.pb_add.clicked.connect(self.event_class_layers_add)
         self.pb_remove.clicked.connect(self.event_class_layers_remove)
         self.pb_import.clicked.connect(self.event_class_import)
+        self.pb_add_tour_layer.clicked.connect(self.tour_layer_add)
         self.pb_close.clicked.connect(self.dialog_close)
 
         self.entries = qgis_utils.qgis_entries_get("project")
@@ -144,6 +148,14 @@ class EventClassManager(QDialog, FORM_CLASS):
             self.pb_remove.setEnabled(False)
             self.pb_import.setEnabled(False)
 
+        self.pb_add_tour_layer.setEnabled(False)
+        row_index = self.tableWidget.selectionModel().currentIndex().row()
+        if row_index == -1:
+            return None
+        else:
+            if self.tableWidget.item(row_index, 1).text()[0].lower() == "t":
+                self.pb_add_tour_layer.setEnabled(True)
+
     def selection_get(self):
         row_index = self.tableWidget.selectionModel().currentIndex().row()
         if row_index == -1:
@@ -171,6 +183,16 @@ class EventClassManager(QDialog, FORM_CLASS):
             layer_bp = qgis_utils.layer_by_tablename_get(self.schema, event_class_name + "_bp")
             layers_list.extend([layer, layer_bp])
         elif event_class_type == "t":
+            # check first for existing tour layers
+            if self.pg_conn.view_exists(self.schema, "v_" + event_class_name + "_%"):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Delete Event Class")
+                msg.setText("Remove all tour layers of Event Class '" + event_class_name + "' first.")
+                msg.setStandardButtons(QMessageBox.Ok)
+                msg.exec_()
+                return
+
             layer = qgis_utils.layer_by_tablename_get(self.schema, event_class_name)
             layer_mt = qgis_utils.layer_by_tablename_get(self.schema, event_class_name + "_mt")
             v_layer = qgis_utils.layer_by_tablename_get(self.schema, "v_" + event_class_name)
@@ -230,12 +252,18 @@ class EventClassManager(QDialog, FORM_CLASS):
             if not dlg.data_get():
                 return
             event_class_name, event_class_type, event_class_option = dlg.data_get()
-            for key, val in self.lrs_event_classes.event_class_names.items():
-                if val.lower() == event_class_name.lower():
-                    msg = QMessageBox(QMessageBox.Critical, "New Event Class", "Event Class Name already exists.",
-                                      QMessageBox.Ok)
-                    msg.exec_()
-                    return
+            if self.pg_conn.table_exists(self.schema, event_class_name.lower()):
+                msg = QMessageBox(QMessageBox.Critical, "New Event Class", "Table name already exists.",
+                                  QMessageBox.Ok)
+                msg.exec_()
+                return
+
+            # for key, val in self.lrs_event_classes.event_class_names.items():
+            #     if val.lower() == event_class_name.lower():
+            #         msg = QMessageBox(QMessageBox.Critical, "New Event Class", "Event Class Name already exists.",
+            #                           QMessageBox.Ok)
+            #         msg.exec_()
+            #         return
 
             self.lrs_event_classes.event_class_create(event_class_name, event_class_type, event_class_option,
                                                       self.lrs_project.route_class_name)
@@ -315,6 +343,16 @@ class EventClassManager(QDialog, FORM_CLASS):
             msg = QMessageBox(QMessageBox.Critical, "Add Layer", "Layer " + name + " failed to add!",
                               QMessageBox.Ok)
             msg.exec_()
+
+    def tour_layer_add(self):
+        row_values = self.selection_get()
+        if row_values is not None:
+            event_class_name = row_values[2]
+            event_names_class = LRSEventNamesClass(self.pg_conn, self.schema, event_class_name, "t")
+            dlg = TourLayerManager(self.iface, self.pg_conn, self.schema, self.lrs_project,
+                                   event_names_class, self.entries, self.credentials)
+            dlg.setWindowTitle("Add Tour as Layer from '" + event_class_name + "'")
+            dlg.exec_()
 
     def dialog_close(self):
         self.conn_close()

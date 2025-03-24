@@ -37,6 +37,7 @@ class EventNamesManager(QDialog, FORM_CLASS):
         # self.<objectname>, and you can use autoconnect slots
         self.setupUi(self)
         self.event_names_class = event_names_class
+        self.event_class_name = event_names_class.event_class_name
         self.event_class_type = self.event_names_class.event_class_type
         self.selected_event_name = None
         self.selected_event_id = None
@@ -140,7 +141,12 @@ class EventNamesManager(QDialog, FORM_CLASS):
                                                        name_new)
             if not okpressed or name_new == '':
                 return
-        self.event_names_class.event_name_add(name_new)
+        try:
+            self.event_names_class.event_name_add(name_new)
+        except Exception as error:
+            # insertion error, e.g. user-defined not-null-fields
+            msg = QMessageBox(QMessageBox.Critical, "New Event Name", str(error), QMessageBox.Ok)
+            msg.exec_()
         self.event_names_get()
 
     def event_name_delete(self):
@@ -149,6 +155,14 @@ class EventNamesManager(QDialog, FORM_CLASS):
                               "Event Name is in use and can not be deleted.", QMessageBox.Ok)
             msg.exec_()
             return
+        # check first for existing tour layers
+        if self.event_class_type == "t":
+            viewname = "v_" + self.event_class_name + "_" + self.selected_event_id
+            if self.event_names_class.event_view_exists(viewname):
+                msg = QMessageBox(QMessageBox.Critical, "Delete Event Name",
+                                  "Tour layer exists, Event Name can not be deleted.", QMessageBox.Ok)
+                msg.exec_()
+                return
         self.event_names_class.event_name_delete(self.selected_event_id)
         self.event_names_get()
 

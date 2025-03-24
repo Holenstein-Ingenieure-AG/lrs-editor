@@ -95,8 +95,8 @@ class DataCheck(QDialog, FORM_CLASS):
         self.items_p = ["Events without Base Points", "Unused Event Names",
                         "Base Points without Event", "Base Point not on Route"]
         self.items_t = ["Event Measures", "Unused Event Names",
-                        "Event Name References",
-                        "Missing Event Point", "Event Point not on Route"]
+                        "Event Name References", "Missing Event Point", "Event Point not on Route",
+                        "Order of Sort Numbers", "Event Point without Reference"]
         self.checkdict = {}
         self.checks_add()
 
@@ -393,6 +393,7 @@ class DataCheck(QDialog, FORM_CLASS):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.textEdit.append("Check " + event_class_name + ":")
         QApplication.processEvents()
+
         for check in tmplist:
             if check == "Event Measures":
                 self.textEdit.append("..." + check + "...")
@@ -446,6 +447,35 @@ class DataCheck(QDialog, FORM_CLASS):
                     if not event[3]:
                         self.lrs_check_class.insert(event_class_name, "ERROR", "Event Point not on Route.",
                                                     event[1], event[0], event[2])
+                self.progressBar.setValue(self.progressBar.value() + self.progress_step)
+            if check== "Order of Sort Numbers":
+                self.textEdit.append("..." + check + "...")
+                QApplication.processEvents()
+                event_names_class = LRSEventNamesClass(self.pg_conn, self.schema, event_class_name, "t")
+                for key, val in event_names_class.event_names_used.items():
+                    # only digitized tours
+                    if val > 0:
+                        event_uuid = event_names_class.event_uuid_get(key)
+                        result = lrs_layer.toursortnr_check(event_uuid)
+                        if len(result) > 0:
+                            event_name = event_names_class.event_name_get(key)
+                            for value in result:
+                                self.lrs_check_class.insert(event_class_name, "ERROR", event_name + ": " + value[1],
+                                                            None, value[0])
+                self.progressBar.setValue(self.progressBar.value() + self.progress_step)
+            if check== "Event Point without Reference":
+                self.textEdit.append("..." + check + "...")
+                QApplication.processEvents()
+                fields = """{id}, {uuid}, {geom}""" \
+                            .format(id="pt.id", uuid="pt.uuid",geom="pt.geom")
+                tablename = event_class_name + " pt LEFT JOIN " + self.schema + "." + event_class_name + \
+                            "_mt mt ON mt.frompoint_id = pt.uuid OR mt.topoint_id = pt.uuid"
+                where =  "mt.uuid IS NULL"
+                result = self.pg_conn.table_select(self.schema, tablename, fields, where)
+                if len(result) > 0:
+                    for event_point in result:
+                        self.lrs_check_class.insert(event_class_name, "ERROR", "Event Point without Reference in "
+                                                    "Tour Measure Table", event_point[2], event_point[1])
                 self.progressBar.setValue(self.progressBar.value() + self.progress_step)
 
     def layer_add(self):

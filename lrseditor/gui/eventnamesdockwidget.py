@@ -45,6 +45,10 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
         self.cont_event_names = None
         self.event_names = None
 
+        # connect search and changed item
+        self.le_event_name.textChanged.connect(self.text_changed)
+        self.listWidget.currentItemChanged.connect(self.currentitem_changed)
+
     def form_update(self):
         # Initialize routine is already passed when loading the plugin
         # -> own function to update contents
@@ -67,11 +71,6 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
         self.txt_event_class_name.setText(event_class_name)
         self.cont_event_names = LRSEventNamesClass(self.pg_conn, schema, event_class_name, "c")
 
-        # connect search
-        self.le_event_name.setText("")
-        self.le_event_name.textChanged.connect(self.text_changed)
-        self.listWidget.currentItemChanged.connect(self.currentitem_changed)
-
         self.listWidget.clear()
         # convert into sorted list (case insensitive)
         self.event_names = list(self.cont_event_names.event_names.values())
@@ -79,6 +78,10 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
         # self.event_names.sort(key=lambda y: y.lower())
         self.event_names.sort(key=locale.strxfrm)
         self.listWidget.addItems(self.event_names)
+        self.listWidget.setUniformItemSizes(True)
+
+        # clear search field
+        self.le_event_name.setText("")
 
     def text_changed(self):
         # call search function
@@ -116,9 +119,10 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
             self.le_event_name.setText("")
             item = self.listWidget.findItems(event_name, Qt.MatchRegExp)[0]
 
-        # releases currentitem_changed:
+        # releases currentitem_changed():
         self.listWidget.setCurrentItem(item)
-        # item.setSelected(True)
+
+        # not required: item.setSelected(True)
         self.listWidget.scrollToItem(item, QAbstractItemView.PositionAtTop)
         self.listWidget.setFocus()
 
