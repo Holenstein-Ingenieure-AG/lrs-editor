@@ -13,7 +13,7 @@ name=LRS-Editor
 qgisMinimumVersion=3.22
 qgisMaximumVersion=3.99
 description=Editor for Linear Referencing Systems
-version=1.3.1
+version=1.4.0
 author=Holenstein Ingenieure AG
 email=reto.meier@h-ing.ch
 
@@ -26,7 +26,12 @@ repository=https://github.com/Holenstein-Ingenieure-AG/lrs-editor
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog= 1.4.0
+ - Add Tour as a layer
+ - Extended Data Check for Tours
+ - Bug fixes
+ 1.3.1 Bug fix
+ 1.3.0 First release
 
 # Tags are comma separated with spaces allowed
 tags=linear referencing system, lrs, linear referencing, dynamic segmentation, network, postgis, vector, python

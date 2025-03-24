@@ -246,9 +246,11 @@ class LRSEditorPlugin:
                 self.layer_previous = layer
 
         if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer):
+            self.__digitool.setEnabled(False)
+            self.__movetool.setEnabled(False)
+            self.__deletetool.setEnabled(False)
             self.__eventnamestool.setEnabled(False)
             return
-
         if layer.isEditable():
             self.layerediting_started()
         else:
@@ -277,7 +279,6 @@ class LRSEditorPlugin:
         layer = self.iface.activeLayer()
         if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer) or not layer.isEditable():
             return
-
         comment_type = self.comment_type_get()
         # check if LRS-Layer
         if comment_type == 1 or comment_type == 2 or comment_type == 4:
@@ -329,8 +330,11 @@ class LRSEditorPlugin:
 
     def comment_type_get(self):
         layer = self.iface.activeLayer()
-        val = layer.dataComment()
         comment_type = -1
+        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer):
+            return comment_type
+
+        val = layer.dataComment()
         try:
             comment_type = self.comment_types.index(val)
         except ValueError:
