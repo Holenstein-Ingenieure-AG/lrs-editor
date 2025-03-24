@@ -84,6 +84,7 @@ def connection_params_get(connection_name):
     host = settings.value('host')
     port = settings.value('port')
     dbname = settings.value('database')
+    # sslmode = settings.value('sslmode')
     settings.endGroup()
     return host, port, dbname
 

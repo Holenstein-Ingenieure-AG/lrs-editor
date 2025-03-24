@@ -52,6 +52,10 @@ class PGConn:
             self.conn.close()
             self.conn = None
 
+    def rollback(self):
+        if self.conn is not None:
+            self.conn.rollback()
+
     def postgis_exists(self):
         cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         query = """SELECT EXISTS(SELECT extname FROM pg_catalog.pg_extension WHERE extname = 'postgis')"""
@@ -83,6 +87,13 @@ class PGConn:
         cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         query = """SELECT EXISTS(SELECT * FROM pg_catalog.pg_tables WHERE schemaname = '{schema}' AND 
                 tablename = '{tablename}')""".format(schema=schema, tablename=tablename)
+        cur.execute(query)
+        return bool(cur.fetchone()[0])
+
+    def view_exists(self, schema, viewname):
+        cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = """SELECT EXISTS(SELECT * FROM pg_catalog.pg_views WHERE schemaname = '{schema}' AND 
+                viewname LIKE '{viewname}')""".format(schema=schema, viewname=viewname)
         cur.execute(query)
         return bool(cur.fetchone()[0])
 
@@ -328,7 +339,6 @@ class PGConn:
                     .format(schema=schema, tablename_a=tablename_a, tablename_b=tablename_b, fields=fields,
                             countfield=countfield, a_id_field=a_id_field, b_id_field=b_id_field, where=where,
                             group=group, order=order)
-
         cur.execute(query)
         rows_list = cur.fetchall()
         return rows_list
@@ -625,6 +635,58 @@ class PGConn:
         cur.execute(create)
         comment = """COMMENT ON VIEW {schema}.{viewname} IS 'LRS-Editor, Tour Event View';""" \
                   .format(schema=schema, viewname=viewname)
+        cur.execute(comment)
+        self.conn.commit()
+
+    def tour_view_create(self, schema, event_class_name, route_class_name, event_id, srid):
+        cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        exclude_fieldname = ["id", "geom", "uuid", "name", "createtstz", "changetstz", "geomtstz", "event_id", "azi",
+                             "route_id", "sortnr", "frommeas", "tomeas", "frompoint_id", "topoint_id", "routedir",
+                             "apprtstz"]
+        table_mt_name = event_class_name + "_mt"
+        fields = self.fieldnames_get(schema, table_mt_name)
+        user_fields = ""
+        for field in fields:
+            fieldname = field[0]
+            if fieldname not in exclude_fieldname:
+                user_fields = ''.join((user_fields, ", ", fieldname))
+
+        viewname = "v_" + event_class_name + "_" + event_id
+        table_et_name = event_class_name + "_et"
+        create = """CREATE or REPLACE VIEW {schema}.{viewname} as SELECT 
+                    a.id, 
+                    a.uuid,
+                    a.routedir,
+                    a.sortnr,
+                    a.frommeas,
+                    a.tomeas,
+                    CASE WHEN routedir THEN 
+                    ST_LocateBetween(ST_AddMeasure(
+                    ST_Collect(rc.geom ORDER BY rc.sortnr ASC), 0, 
+                    ST_Length(ST_Collect(rc.geom ORDER BY rc.sortnr ASC))), 
+                    a.frommeas, a.tomeas)::geometry(MultiLineStringM,{srid})
+                    ELSE
+                    ST_Reverse(
+                    ST_LocateBetween(ST_AddMeasure(
+                    ST_Collect(rc.geom ORDER BY rc.sortnr ASC), 0, 
+                    ST_Length(ST_Collect(rc.geom ORDER BY rc.sortnr ASC))), 
+                    a.frommeas, a.tomeas))::geometry(MultiLineStringM,{srid})
+                    END as geom,
+                    a.event_id,
+                    b.name as event_name,
+                    rc.name as route_name
+                    {user_fields}
+                    FROM {schema}.{table_mt_name} a 
+                    LEFT JOIN {schema}.{route_class_name} rc ON a.route_id = rc.route_id 
+                    LEFT JOIN {schema}.{table_et_name} b ON a.event_id = b.uuid 
+                    WHERE b.id = {event_id}
+                    GROUP BY a.id, b.name, rc.name;""" \
+                    .format(schema=schema, viewname=viewname, srid=srid, table_mt_name=table_mt_name,
+                    user_fields=user_fields, route_class_name=route_class_name, table_et_name=table_et_name,
+                    event_id=event_id)
+        cur.execute(create)
+        comment = """COMMENT ON VIEW {schema}.{viewname} IS 'LRS-Editor, Tour View';""" \
+            .format(schema=schema, viewname=viewname)
         cur.execute(comment)
         self.conn.commit()
 

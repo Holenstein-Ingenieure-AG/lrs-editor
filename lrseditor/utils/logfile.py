@@ -26,7 +26,10 @@ class LogFile:
         self.__fullfilename = path
         if os.path.exists(self.__fullfilename):
             os.remove(self.__fullfilename)
-        self.__file = open(self.__fullfilename, 'a')
+        try:
+            self.__file = open(self.__fullfilename, 'a')
+        except Exception as error:
+            raise Exception(error)
         self.__starttime = self.__datetime_get()[0]
         self.__warn_count = 0
         self.__err_count = 0
