@@ -320,7 +320,7 @@ class LRSTourEventClass(LRSLayerClass):
         events_list.sort(key=operator.itemgetter(4), reverse=False)
         return events_list
 
-    def event_append(self, event_uuid, result_fi, result_se, route_id, direction):
+    def event_append(self, event_uuid, result_fi, result_se, route_id, routedir):
         result = False
         event_list = self.__events_part_get(event_uuid)
         # inconsistent data, more or less than one point found
@@ -332,10 +332,12 @@ class LRSTourEventClass(LRSLayerClass):
         toursortnr_old = event_list[0][3]
 
         # decide if new part is before or after
+        # this can not be done with measures of selected points
+        # because the new part can be along a different route
         if pointtype == 5:
             # is frompoint
             if routedir_old:
-                toursortnr = toursortnr_old - 1
+                toursortnr = toursortnr_old
             else:
                 toursortnr = toursortnr_old + 1
         elif pointtype == 7:
@@ -343,29 +345,21 @@ class LRSTourEventClass(LRSLayerClass):
             if routedir_old:
                 toursortnr = toursortnr_old + 1
             else:
-                toursortnr = toursortnr_old - 1
+                toursortnr = toursortnr_old
         else:
             return result
         if toursortnr == 0:
             toursortnr = 1
 
-        # define routedir
-        if not direction:
+        # determine direction
+        if not routedir:
             tomeas = result_fi[1]
             frommeas = result_se[1]
-            if toursortnr > toursortnr_old:
-                routedir = False
-            else:
-                routedir = True
             feature_fi, uuid_id_fi = self.__event_feature_get(result_se[0], result_se[2])
             feature_se, uuid_id_se = self.__event_feature_get(result_fi[0], result_fi[2])
         else:
             tomeas = result_se[1]
             frommeas = result_fi[1]
-            if toursortnr > toursortnr_old:
-                routedir = True
-            else:
-                routedir = False
             feature_fi, uuid_id_fi = self.__event_feature_get(result_fi[0], result_fi[2])
             feature_se, uuid_id_se = self.__event_feature_get(result_se[0], result_se[2])
 
@@ -544,7 +538,7 @@ class LRSTourEventClass(LRSLayerClass):
         # return all values from _mt for a tour (depending of route_id)
         request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
         request.setSubsetOfAttributes(['uuid', 'route_id', 'sortnr', 'frommeas', 'frompoint_id',
-                                       'tomeas', 'topoint_id'], self.__layer_mt.fields())
+                                       'tomeas', 'topoint_id', 'routedir'], self.__layer_mt.fields())
         if route_id is None:
             expression = "event_id = \'" + event_id + "'"
         else:
@@ -553,7 +547,8 @@ class LRSTourEventClass(LRSLayerClass):
         events_list = []
         for feature in self.__layer_mt.getFeatures(request):
             events_list.append([feature.id(), feature['uuid'], feature['route_id'], feature['sortnr'],
-                                feature['frommeas'], feature['frompoint_id'], feature['tomeas'], feature['topoint_id']])
+                                feature['frommeas'], feature['frompoint_id'], feature['tomeas'], feature['topoint_id'],
+                                feature['routedir']])
         return events_list
 
     def __events_part_get(self, event_uuid):
@@ -714,10 +709,10 @@ class LRSTourEventClass(LRSLayerClass):
         if abs(frommeas - frommeas_old) <= tolerance and abs(tomeas - tomeas_old) <= tolerance:
             return True
             # one overlapping point
-        if abs(frommeas - frommeas_old) <= tolerance <= tomeas - tomeas_old:
+        if abs(frommeas - frommeas_old) <= tolerance <= (tomeas - tomeas_old):
             return True
             # one overlapping point
-        if frommeas_old - frommeas >= tolerance >= abs(tomeas - tomeas_old):
+        if (frommeas_old - frommeas) >= tolerance >= abs(tomeas - tomeas_old):
             return True
 
         return False
@@ -745,6 +740,18 @@ class LRSTourEventClass(LRSLayerClass):
                                                                     countfield, a_id_field, b_id_field, group, where)
         for val in result_topoint:
             result.append(["To", val[0], val[2]])
+        return result
+
+    def toursortnr_check(self, event_id):
+        fields = """{id}, {uuid}, {sortnr}""" \
+                    .format(id="id", uuid="uuid",event_id="event_id", sortnr="sortnr")
+        where = "event_id = '" + event_id + "'"
+        order = "sortnr ASC"
+        events_list = self.__pg_conn.table_select(self.__schema, self.__tablename_mt, fields, where, order)
+        result = []
+        for i in range(1, len(events_list) + 1, 1):
+            if i != events_list[i - 1][2]:
+                result.append([events_list[i - 1][1], "Incorrect sortnr at number " + str(events_list[i - 1][2])])
         return result
 
     def event_approve(self, feat_id):

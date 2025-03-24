@@ -126,6 +126,9 @@ class LRSEventNamesClass:
             if key == event_id:
                 return val
 
+    def event_view_exists(self, viewname):
+        return self.__pg_conn.view_exists(self.__schema, viewname)
+
     # get properties
     @property
     def event_names(self):
@@ -138,3 +141,7 @@ class LRSEventNamesClass:
     @property
     def event_class_type(self):
         return self.__event_class_type
+
+    @property
+    def event_class_name(self):
+        return self.__event_class_name

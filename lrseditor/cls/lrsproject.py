@@ -142,8 +142,8 @@ class LRSProject:
                     event_class_name_list.append(event_class_name)
             if len(event_class_name_list) > 0:
                 for val in event_class_name_list:
-                    logfile.write("Route " + route_name + ": has events of class " + val + " and will not be deleted",
-                                  "ERROR")
+                    logfile.write("Route " + route_name + ": Basesystem does not exist anymore, but still has events "
+                                                          "of class " + val, "ERROR")
                     route_del_list_tmp.append([route_name, route_id, val])
             else:
                 route_del_list_def.append(route_name)

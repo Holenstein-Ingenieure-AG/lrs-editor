@@ -88,8 +88,13 @@ class LRSPointEventClass(LRSLayerClass):
         value = event_name.replace("'", "''")
         values = "'{}', {}, '{}', '{}', '{}'".format(uuid, 'NULL', value, now_utc, now_utc)
 
-        # must be inserted with SQL, not by QGIS attribute: to get new id
-        event_name_id = self.__pg_conn.table_insert(self.__schema, self.__event_class_name, fields, values, "id")
+        try:
+            # must be inserted with SQL, not by QGIS attribute: to get new id
+            event_name_id = self.__pg_conn.table_insert(self.__schema, self.__event_class_name, fields, values, "id")
+        except Exception as error:
+            # insertion error, e.g. user-defined not-null-fields
+            self.__pg_conn.rollback()
+            raise Exception(error)
 
         self.__uuiddict[event_name_id] = uuid
         self.__namedict[event_name_id] = event_name
