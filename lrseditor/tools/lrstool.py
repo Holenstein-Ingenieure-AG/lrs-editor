@@ -61,18 +61,18 @@ class LRSTool:
 
     def message_show(self, text, msg_type):
         if msg_type == 1:
-            t = QMessageBox.Question
+            t = QMessageBox.Icon.Question
         elif msg_type == 2:
-            t = QMessageBox.Information
+            t = QMessageBox.Icon.Information
         elif msg_type == 3:
-            t = QMessageBox.Warning
+            t = QMessageBox.Icon.Warning
         elif msg_type == 4:
-            t = QMessageBox.Critical
+            t = QMessageBox.Icon.Critical
         else:
-            t = QMessageBox.NoIcon
+            t = QMessageBox.Icon.NoIcon
 
         msg = QMessageBox(t, "LRS-Editor", text)
-        msg.exec_()
+        msg.exec()
 
     def approvable_check(self, showmsg=True):
         if not self.lrs_project:
@@ -108,13 +108,13 @@ class LRSTool:
             result = True
             if showmsg:
                 msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
+                msg.setIcon(QMessageBox.Icon.Information)
                 msg.setText("There are changed Event Points to approve first. See details for Event Classes.")
                 msg.setWindowTitle("Approve Event Classes")
                 txt = "\n".join(event_classes)
                 msg.setDetailedText(txt)
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msg.exec()
 
         return result
 

@@ -51,4 +51,4 @@ class LRSEventNamesAdmin(LRSTool):
         if event_names_class is None:
             return
         dlg = EventNamesManager(self.iface, event_names_class)
-        dlg.exec_()
+        dlg.exec()

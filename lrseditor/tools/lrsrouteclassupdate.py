@@ -66,11 +66,11 @@ class LRSRouteClassUpdate(LRSTool):
         try:
             logfile = LogFile(self.lrs_project.logfile_path)
         except Exception as error:
-            msg = QMessageBox(QMessageBox.Critical, "Open Log File", str(error), QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Open Log File", str(error), QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         # check data of basesystem
         result = lrs_basesystem.data_check(logfile)
@@ -104,7 +104,7 @@ class LRSRouteClassUpdate(LRSTool):
 
             if len(route_del_list_tmp) > 0:
                 msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
+                msg.setIcon(QMessageBox.Icon.Information)
                 msg.setText("There are Routes to delete with existing Events. Do you want to delete Routes and "
                             "the referencing Events? "
                             "See details for Routes and Event Classes.")
@@ -113,9 +113,9 @@ class LRSRouteClassUpdate(LRSTool):
                     txt = txt + route[0] + ": " + route[2] + "\n"
                 msg.setDetailedText(txt)
                 msg.setWindowTitle("Delete Routes")
-                msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                ret = msg.exec_()
-                if ret == QMessageBox.Yes:
+                msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                ret = msg.exec()
+                if ret == QMessageBox.StandardButton.Yes:
                     for route in route_del_list_tmp:
                         event_class_name = route[2]
                         event_class_type = self.lrs_event_classes.event_class_type_get(event_class_name)

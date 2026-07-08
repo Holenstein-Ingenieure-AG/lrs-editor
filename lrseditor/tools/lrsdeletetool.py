@@ -91,13 +91,13 @@ class LRSDeleteTool(LRSMapTool):
         else:
             return
 
-        if modifiers == Qt.ControlModifier:
+        if modifiers == Qt.KeyboardModifier.ControlModifier:
             # delete whole Tour
-            msg = QMessageBox(QMessageBox.Question, "LRS-Editor", "Do you want to delete the whole Tour? "
+            msg = QMessageBox(QMessageBox.Icon.Question, "LRS-Editor", "Do you want to delete the whole Tour? "
                                                                   "This can not be undone.",
-                              QMessageBox.Ok | QMessageBox.Cancel)
-            ret = msg.exec_()
-            if ret == QMessageBox.Ok:
+                              QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            ret = msg.exec()
+            if ret == QMessageBox.StandardButton.Ok:
                 if not self.lrs_layer.tour_delete(uuid):
                     self.lrs_layer.selection_remove()
                     self.message_show("Inconsistent data.", 4)

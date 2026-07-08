@@ -79,7 +79,7 @@ class LRSMoveTool(LRSMapTool):
 
             # must be before any other dialog
             modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.ShiftModifier:
+            if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 # append tour part, prepare and append
                 if not self.route_select():
                     self.tool_reset()
@@ -193,7 +193,7 @@ class LRSMoveTool(LRSMapTool):
             sortnr = valuelist[0][1]
             result = self.route_class.point_meas_get(route_id, self.point, self.lrs_project.srid, sortnr)
             meas = result[1]
-            if modifiers == Qt.ShiftModifier:
+            if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 # append tour part, set tourmarker startpoint
                 if datalist is None:
                     self.tourmarker.startpoint_set(self.point,[result, route_id, sortnr, self.feat_uuid])
@@ -271,7 +271,7 @@ class LRSMoveTool(LRSMapTool):
                 return
             # must be before any other dialog
             modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.ShiftModifier:
+            if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 # insert additional Base Point
                 # check if a route is selected
                 self.route_class.select_by_rect(self.rect, "set")
@@ -443,7 +443,7 @@ class LRSMoveTool(LRSMapTool):
             self.eventnamesdockwidget.event_name_deselect()
 
     def keyPressEvent(self, key_event):
-        if key_event.key() == Qt.Key_Escape:
+        if key_event.key() == Qt.Key.Key_Escape:
             self.snapmarker_remove()
             self.tool_reset()
 

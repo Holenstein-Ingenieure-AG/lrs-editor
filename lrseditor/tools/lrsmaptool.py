@@ -99,5 +99,5 @@ class LRSMapTool(LRSTool, QgsMapTool):
         return selected
 
     def activate(self):
-        self.canvas.setCursor(Qt.CrossCursor)
+        self.canvas.setCursor(Qt.CursorShape.CrossCursor)
         self.snappoint = None

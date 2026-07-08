@@ -89,7 +89,7 @@ class LRSDigiTool(LRSMapTool):
             # set new event name
             if event_name is None:
                 event_name, okpressed = QInputDialog.getText(self.eventnamesdockwidget, "New Event Name",
-                                                             "Set a new Event Name:", QLineEdit.Normal, "")
+                                                             "Set a new Event Name:", QLineEdit.EchoMode.Normal, "")
                 if not okpressed or event_name == '':
                     self.route_class.selection_remove()
                     return
@@ -97,7 +97,7 @@ class LRSDigiTool(LRSMapTool):
                 while event_name.lower() in names_list:
                     self.message_show("Event Name already exists.", 2)
                     event_name, okpressed = QInputDialog.getText(self.eventnamesdockwidget, "New Event Name",
-                                                                 "Set a new Event Name:", QLineEdit.Normal, "")
+                                                                 "Set a new Event Name:", QLineEdit.EchoMode.Normal, "")
                     if not okpressed or event_name == '':
                         self.route_class.selection_remove()
                         return
@@ -151,7 +151,7 @@ class LRSDigiTool(LRSMapTool):
                                             route_id_fi, self.route_class, toursortnr, self.lrs_project.srid)
                 self.tourmarker.remove()
 
-                if modifiers == Qt.ShiftModifier:
+                if modifiers == Qt.KeyboardModifier.ShiftModifier:
                     # continue tour when Shift is pressed, increase toursortnr
                     self.tourmarker.endpoint_set(self.point, [route_id_se, sortnr_se, event_name, toursortnr + 1])
             else:
@@ -181,10 +181,10 @@ class LRSDigiTool(LRSMapTool):
                 self.message_show("Select at least one route.", 2)
             return
         elif lines_count > 0:
-            if modifiers == Qt.ShiftModifier:
+            if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 self.route_class.select_by_rect(self.rect, "add")
                 return
-            elif modifiers == Qt.ControlModifier:
+            elif modifiers == Qt.KeyboardModifier.ControlModifier:
                 self.route_class.select_by_rect(self.rect, "remove")
                 return
 
@@ -202,7 +202,7 @@ class LRSDigiTool(LRSMapTool):
         # set new event name
         if event_id is None:
             name_new, okpressed = QInputDialog.getText(self.eventnamesdockwidget, "New Event Name",
-                                                       "Set a new Event Name:", QLineEdit.Normal, "")
+                                                       "Set a new Event Name:", QLineEdit.EchoMode.Normal, "")
             if not okpressed or name_new == '':
                 self.route_class.selection_remove()
                 return
@@ -210,7 +210,7 @@ class LRSDigiTool(LRSMapTool):
             while name_new.lower() in names_list:
                 self.message_show("Event Name already exists.", 2)
                 name_new, okpressed = QInputDialog.getText(self.eventnamesdockwidget, "New Event Name",
-                                                           "Set a new Event Name:", QLineEdit.Normal,
+                                                           "Set a new Event Name:", QLineEdit.EchoMode.Normal,
                                                            name_new)
                 if not okpressed or name_new == '':
                     self.route_class.selection_remove()
@@ -220,8 +220,8 @@ class LRSDigiTool(LRSMapTool):
                 event_id = self.lrs_layer.event_name_add(name_new)
             except Exception as error:
                 # insertion error, e.g. user-defined not-null-fields
-                msg = QMessageBox(QMessageBox.Critical, "New Event Name", str(error), QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Name", str(error), QMessageBox.StandardButton.Ok)
+                msg.exec()
 
         if event_id is None:
             self.route_class.selection_remove()
@@ -302,7 +302,7 @@ class LRSDigiTool(LRSMapTool):
         self.canvas.redrawAllLayers()
 
     def keyPressEvent(self, key_event):
-        if key_event.key() == Qt.Key_Escape:
+        if key_event.key() == Qt.Key.Key_Escape:
             self.snapmarker_remove()
             self.route_class.selection_remove()
 
