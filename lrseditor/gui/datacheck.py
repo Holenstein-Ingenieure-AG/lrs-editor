@@ -53,7 +53,7 @@ class DataCheck(QDialog, FORM_CLASS):
         # configure buttonBox
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
-        self.button_apply = self.buttonBox.button(QDialogButtonBox.Apply)
+        self.button_apply = self.buttonBox.button(QDialogButtonBox.StandardButton.Apply)
         self.button_apply.clicked.connect(self.apply)
         self.button_apply.setEnabled(False)
         self.pb_add.clicked.connect(self.layer_add)
@@ -163,12 +163,12 @@ class DataCheck(QDialog, FORM_CLASS):
         for key, val in itemsdict.items():
             parent = QTreeWidgetItem(self.treeWidget)
             parent.setText(0, str(key))
-            parent.setFlags(parent.flags() | Qt.ItemIsAutoTristate | Qt.ItemIsUserCheckable)
+            parent.setFlags(parent.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable)
             for check in val:
                 child = QTreeWidgetItem(parent)
                 child.setText(0, str(check))
-                child.setFlags(child.flags() | Qt.ItemIsUserCheckable)
-                child.setCheckState(0, Qt.Checked)
+                child.setFlags(child.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                child.setCheckState(0, Qt.CheckState.Checked)
 
         self.treeWidget.expandAll()
         # allow signals, when item is changed
@@ -276,7 +276,7 @@ class DataCheck(QDialog, FORM_CLASS):
     def cont_event_class_check(self, layer, event_class_name, routelist, tolerance, route_class_name):
         lrs_layer = LRSContEventClass(self.pg_conn, self.schema, layer)
         tmplist = self.checkdict.get("c")
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         self.textEdit.append("Check " + event_class_name + ":")
         QApplication.processEvents()
         for check in tmplist:
@@ -342,7 +342,7 @@ class DataCheck(QDialog, FORM_CLASS):
     def point_event_class_check(self, layer, event_class_name, tolerance, route_class_name):
         lrs_layer = LRSPointEventClass(self.pg_conn, self.schema, layer)
         tmplist = self.checkdict.get("p")
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         self.textEdit.append("Check " + event_class_name + ":")
         QApplication.processEvents()
         for check in tmplist:
@@ -390,7 +390,7 @@ class DataCheck(QDialog, FORM_CLASS):
     def tour_event_class_check(self, layer, event_class_name, routelist, tolerance, route_class_name):
         lrs_layer = LRSTourEventClass(self.pg_conn, self.schema, layer)
         tmplist = self.checkdict.get("t")
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         self.textEdit.append("Check " + event_class_name + ":")
         QApplication.processEvents()
 
@@ -482,9 +482,9 @@ class DataCheck(QDialog, FORM_CLASS):
         layer = qgis_utils.layer_create(self.entries, self.credentials, "lrs_check_class", "geom", False,
                                         self.lrs_project.srid, False)
         if not layer.isValid():
-            msg = QMessageBox(QMessageBox.Critical, "Data Check", "Layer lrs_check_class failed to load!",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Data Check", "Layer lrs_check_class failed to load!",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
         else:
             qgis_utils.fields_readonly_set(layer, ["id", "class_name", "uuid", "name", "category", "route_name",

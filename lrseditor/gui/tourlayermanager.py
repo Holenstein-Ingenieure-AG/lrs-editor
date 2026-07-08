@@ -52,12 +52,12 @@ class TourLayerManager(QDialog, FORM_CLASS):
         self.tableWidget.setHorizontalHeaderLabels(['Id', 'Name'])
         self.header = self.tableWidget.horizontalHeader()
         # stretch columns
-        self.header.setSectionResizeMode(1, QHeaderView.Stretch)
+        self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         # select multiple rows
-        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tableWidget.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         # no editing
-        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.event_names_get()
 
         # config buttons
@@ -77,17 +77,14 @@ class TourLayerManager(QDialog, FORM_CLASS):
             self.tableWidget.insertRow(row_position)
             iditem = QTableWidgetItem()
             # set numeric data for correct sorting
-            iditem.setData(Qt.DisplayRole, int(key))
+            iditem.setData(Qt.ItemDataRole.DisplayRole, int(key))
             self.tableWidget.setItem(row_position, 0, iditem)
             self.tableWidget.setItem(row_position, 1, QTableWidgetItem(val))
-            self.header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
-        self.header.setSectionResizeMode(0, QHeaderView.Interactive)
+        self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         # enable sorting
         self.tableWidget.setSortingEnabled(True)
-
-        # following sorting is slower:
-        # self.tableWidget.sortItems(2, Qt.AscendingOrder)
 
     def selection_changed(self):
         if len(self.tableWidget.selectionModel().selectedRows()) > 0:
@@ -110,17 +107,17 @@ class TourLayerManager(QDialog, FORM_CLASS):
             layer.setName(event_name)
             if layer is not None:
                 if not layer.isValid():
-                    msg = QMessageBox(QMessageBox.Critical, "Create Layer", "Layer " + event_name + " failed to load!",
-                                      QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Critical, "Create Layer", "Layer " + event_name + " failed to load!",
+                                      QMessageBox.StandardButton.Ok)
+                    msg.exec()
                     return
                 else:
                     QgsProject.instance().addMapLayer(layer)
                     self.canvas.redrawAllLayers()
             else:
-                msg = QMessageBox(QMessageBox.Critical, "Create Layer", "Layer " + event_name + " failed to create!",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "Create Layer", "Layer " + event_name + " failed to create!",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
 
     def tour_layer_delete(self):
         indexes = self.tableWidget.selectionModel().selectedRows()
@@ -132,7 +129,7 @@ class TourLayerManager(QDialog, FORM_CLASS):
             layername = "v_" + self.event_class_name + "_" + event_id
             layers = QgsProject.instance().mapLayers().values()
             for layer in layers:
-                if layer.type() == QgsMapLayer.VectorLayer:
+                if layer.type() == QgsMapLayer.LayerType.VectorLayer:
                     if layer.name() == event_name:
                         QgsProject.instance().removeMapLayers([layer.id()])
                         self.canvas.redrawAllLayers()

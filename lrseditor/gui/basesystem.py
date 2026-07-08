@@ -55,7 +55,7 @@ class BaseSystemSettings(QDialog, FORM_CLASS):
         # configure buttonBox
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
-        self.button_apply = self.buttonBox.button(QDialogButtonBox.Apply)
+        self.button_apply = self.buttonBox.button(QDialogButtonBox.StandardButton.Apply)
         self.button_apply.clicked.connect(self.apply)
         self.button_apply.setEnabled(False)
         self.pb_conn.clicked.connect(self.conn_choose)
@@ -144,7 +144,7 @@ class BaseSystemSettings(QDialog, FORM_CLASS):
         dlg = DBSettings(self.iface, "basesystem")
         dlg.setWindowTitle("Base System Database Settings")
         dlg.gbox_settings.setTitle("Base System Database Settings")
-        dlg.exec_()
+        dlg.exec()
         self.form_update()
 
     def base_class_name_changed(self):
@@ -204,9 +204,9 @@ class BaseSystemSettings(QDialog, FORM_CLASS):
             srid_bool = False
 
         if not srid_bool:
-            msg = QMessageBox(QMessageBox.Critical, "CRS", "CRS of Base System does not match CRS of LRS-Project.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "CRS", "CRS of Base System does not match CRS of LRS-Project.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
         valuelist = [self.le_basesystem_name.text(), self.dsb_tolerance.value(),

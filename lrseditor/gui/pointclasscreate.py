@@ -54,7 +54,7 @@ class PointClassCreate(QDialog, FORM_CLASS):
         self.buttonBox.rejected.connect(self.rejected)
         self.buttonBox.accepted.disconnect()
         self.buttonBox.accepted.connect(self.accepted)
-        self.pb_ok = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.pb_ok = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self.pb_ok.setEnabled(False)
 
     def form_update(self):
@@ -85,7 +85,7 @@ class PointClassCreate(QDialog, FORM_CLASS):
         dlg = DBSettings(self.iface, None)
         dlg.setWindowTitle("Database Connections")
         dlg.gbox_settings.setTitle("Database Settings")
-        dlg.exec_()
+        dlg.exec()
         if not dlg.data_get():
             return
         else:
@@ -123,20 +123,22 @@ class PointClassCreate(QDialog, FORM_CLASS):
 
         # check for spaces in class name
         if ' ' in point_class_name:
-            msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "No spaces in class names allowed.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Create Point Class", "No spaces in class names allowed.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
+            return
+
+        if self.pg_conn_pt.system_table_exists(point_class_name.lower()):
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Create Point Class", "Point Class Name is identical to "
+                                                                               "system table name.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
         if self.pg_conn_pt.table_exists(self.schema_pt, point_class_name.lower()):
-            msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class Name already exists.",
-                              QMessageBox.Ok)
-            msg.exec_()
-            return
-        if self.pg_conn_pt.system_table_exists(point_class_name.lower()):
-            msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class Name is identical to system "
-                                                                          "table name.", QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Create Point Class", "Point Class Name already exists.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
         # --------------------------------
@@ -145,9 +147,9 @@ class PointClassCreate(QDialog, FORM_CLASS):
         geom_field = self.cbx_geom.currentText()
         nodelist = self.pg_conn_pt.linestrings_nodes_get(self.schema_pt, linestring_class_name, geom_field)
         if len(nodelist) == 0:
-            msg = QMessageBox(QMessageBox.Information, "Create Point Class", "Empty Line Class.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information, "Create Point Class", "Empty Line Class.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
         # sort by x-coord, itemgetter ist faster
@@ -204,17 +206,17 @@ class PointClassCreate(QDialog, FORM_CLASS):
 
         self.conn_close()
 
-        msg = QMessageBox(QMessageBox.Information, "Create Point Class", "Point Class created. "
+        msg = QMessageBox(QMessageBox.Icon.Information, "Create Point Class", "Point Class created. "
                                                                          "Do you want to add it to the project?")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        ret = msg.exec_()
-        if ret == QMessageBox.Ok:
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+        ret = msg.exec()
+        if ret == QMessageBox.StandardButton.Ok:
             layer = qgis_utils.layer_create(self.entries, self.credentials, point_class_name, "geom", False,
                                             srid, False)
             if not layer.isValid():
-                msg = QMessageBox(QMessageBox.Critical, "Create Point Class", "Point Class failed to load!",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "Create Point Class", "Point Class failed to load!",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
             else:
                 QgsProject.instance().addMapLayer(layer)

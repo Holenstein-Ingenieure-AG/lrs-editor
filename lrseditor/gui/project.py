@@ -20,7 +20,7 @@
 import os
 
 from qgis.PyQt.uic import loadUiType
-from qgis.PyQt.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox, QFileDialog, QInputDialog
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QMessageBox, QFileDialog
 from qgis.core import QgsProject
 
 from ..utils.pg_conn import PGConn
@@ -55,7 +55,7 @@ class ProjectSettings(QDialog, FORM_CLASS):
         self.pb_remove.clicked.connect(self.route_class_layer_remove)
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
-        self.button_apply = self.buttonBox.button(QDialogButtonBox.Apply)
+        self.button_apply = self.buttonBox.button(QDialogButtonBox.StandardButton.Apply)
         self.button_apply.clicked.connect(self.apply)
         self.button_apply.setEnabled(False)
         self.pb_logfile.clicked.connect(self.filename_get)
@@ -118,14 +118,14 @@ class ProjectSettings(QDialog, FORM_CLASS):
                 except ValueError:
                     srid_bool = False
                 if not srid_bool:
-                    msg = QMessageBox(QMessageBox.Critical, "CRS", "CRS in QGIS does not match CRS of LRS-Project.",
-                                      QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Critical, "CRS", "CRS in QGIS does not match CRS of LRS-Project.",
+                                      QMessageBox.StandardButton.Ok)
+                    msg.exec()
             else:
-                msg = QMessageBox(QMessageBox.Critical, "No valid CRS", "CRS is not valid. Check LRS-Project settings "
+                msg = QMessageBox(QMessageBox.Icon.Critical, "No valid CRS", "CRS is not valid. Check LRS-Project settings "
                                                                         "in database.",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
             self.pb_add.setEnabled(True)
             self.pb_remove.setEnabled(True)
             self.txt_routeupdatetstz.setText(self.lrs_project.routeupdatetstz)
@@ -134,7 +134,7 @@ class ProjectSettings(QDialog, FORM_CLASS):
         dlg = DBSettings(self.iface, "project")
         dlg.setWindowTitle("Project Database Settings")
         dlg.gbox_settings.setTitle("Project Database Settings")
-        dlg.exec_()
+        dlg.exec()
         self.form_update()
 
     def route_class_layer_add(self):
@@ -143,9 +143,9 @@ class ProjectSettings(QDialog, FORM_CLASS):
             return
         layer = qgis_utils.layer_create(self.entries, self.credentials, name, "geom", True, self.lrs_project.srid)
         if not layer.isValid():
-            msg = QMessageBox(QMessageBox.Critical, "Route Class", "Route Class " + name + " failed to load!",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Route Class", "Route Class " + name + " failed to load!",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
         else:
             # set fields readonly, though layer is already readonly
@@ -198,9 +198,9 @@ class ProjectSettings(QDialog, FORM_CLASS):
 
     def crs_dialog_show(self):
         if not self.lrs_project:
-            msg = QMessageBox(QMessageBox.Information, "CRS", "Choose CRS in QGIS before saving LRS-Project settings.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information, "CRS", "Choose CRS in QGIS before saving LRS-Project settings.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
 
     def conn_close(self):
         if self.pg_conn:
@@ -213,19 +213,19 @@ class ProjectSettings(QDialog, FORM_CLASS):
 
         if not self.lrs_project:
             if ' ' in self.le_route_class_name.text():
-                msg = QMessageBox(QMessageBox.Critical, "New Route Class", "No spaces in class names allowed.",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Route Class", "No spaces in class names allowed.",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
             if self.pg_conn.table_exists(self.schema, self.le_route_class_name.text().lower()):
-                msg = QMessageBox(QMessageBox.Critical, "New Route Class", "Route Class Name already exists.",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Route Class", "Route Class Name already exists.",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
             if self.pg_conn.system_table_exists(self.le_route_class_name.text().lower()):
-                msg = QMessageBox(QMessageBox.Critical, "New Route Class", "Route Class Name is identical to system "
-                                                                           "table name.", QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Route Class", "Route Class Name is identical to system "
+                                                                           "table name.", QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
 
             srid = self.cbx_crs.currentText().split(":")[1]
@@ -240,9 +240,10 @@ class ProjectSettings(QDialog, FORM_CLASS):
                 srid_bool = False
 
             if not srid_bool:
-                msg = QMessageBox(QMessageBox.Critical, "No valid CRS", "CRS is not valid. "
-                                                                        "Choose an other CRS in QGIS.", QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "No valid CRS", "CRS is not valid. "
+                                                                        "Choose an other CRS in QGIS.",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
 
             self.lrs_project.create(valuelist, srid)
@@ -252,10 +253,10 @@ class ProjectSettings(QDialog, FORM_CLASS):
             self.rejected()
         else:
             if valuelist[1] != self.lrs_project.route_class_name:
-                msg = QMessageBox(QMessageBox.Critical, "Change Route Class Name",
+                msg = QMessageBox(QMessageBox.Icon.Critical, "Change Route Class Name",
                                   "Changing the route class name may affect your LRS-Project and will not "
-                                  "be executed.", QMessageBox.Ok)
-                msg.exec_()
+                                  "be executed.", QMessageBox.StandardButton.Ok)
+                msg.exec()
                 # reset values
                 self.le_route_class_name.setText(self.lrs_project.route_class_name)
                 valuelist[1] = self.lrs_project.route_class_name

@@ -60,7 +60,7 @@ class DBSettings(QDialog, FORM_CLASS):
         # configure buttonBox
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
-        self.button_apply = self.buttonBox.button(QDialogButtonBox.Apply)
+        self.button_apply = self.buttonBox.button(QDialogButtonBox.StandardButton.Apply)
         self.button_apply.clicked.connect(self.apply)
 
         self.button_apply.setEnabled(False)

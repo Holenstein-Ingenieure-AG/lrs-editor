@@ -58,18 +58,18 @@ class EventNamesManager(QDialog, FORM_CLASS):
         if self.event_class_type == "c" or self.event_class_type == "t":
             self.tableWidget.setColumnCount(3)
             self.tableWidget.setHorizontalHeaderLabels(['Id', 'Used', 'Name'])
-            self.header.setSectionResizeMode(2, QHeaderView.Stretch)
+            self.header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         elif self.event_class_type == "p":
             self.tableWidget.setColumnCount(4)
             self.tableWidget.setHorizontalHeaderLabels(['Id', 'Used', 'BP', 'Name'])
-            # self.header.setSectionResizeMode(0, QHeaderView.Interactive)
-            self.header.setSectionResizeMode(2, QHeaderView.Fixed)
-            self.header.setSectionResizeMode(3, QHeaderView.Stretch)
+            # self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
+            self.header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+            self.header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         # select only one row
-        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # no editing
-        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.event_names_get()
 
     def event_names_get(self):
@@ -83,35 +83,32 @@ class EventNamesManager(QDialog, FORM_CLASS):
             self.tableWidget.insertRow(row_position)
             iditem = QTableWidgetItem()
             # set numeric data for correct sorting
-            iditem.setData(Qt.DisplayRole, int(key))
+            iditem.setData(Qt.ItemDataRole.DisplayRole, int(key))
             self.tableWidget.setItem(row_position, 0, iditem)
             useditem = QTableWidgetItem()
             used_val = self.event_names_class.event_names_used[int(key)]
             # set numeric data for correct sorting
-            useditem.setData(Qt.DisplayRole, int(used_val))
+            useditem.setData(Qt.ItemDataRole.DisplayRole, int(used_val))
             self.tableWidget.setItem(row_position, 1, useditem)
             if self.event_class_type == "c" or self.event_class_type == "t":
                 self.tableWidget.setItem(row_position, 2, QTableWidgetItem(val))
-                # self.header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-                self.header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+                # self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+                self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
             elif self.event_class_type == "p":
                 # insert base point count
                 bpitem = QTableWidgetItem()
                 bp_count = self.event_names_class.event_bp_count[int(key)]
                 # set numeric data for correct sorting
-                bpitem.setData(Qt.DisplayRole, int(bp_count))
+                bpitem.setData(Qt.ItemDataRole.DisplayRole, int(bp_count))
                 self.tableWidget.setItem(row_position, 2, QTableWidgetItem(bpitem))
                 self.tableWidget.setItem(row_position, 3, QTableWidgetItem(val))
-                # self.header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-                self.header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-                self.header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+                # self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+                self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+                self.header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
 
-        self.header.setSectionResizeMode(0, QHeaderView.Interactive)
+        self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         # enable sorting
         self.tableWidget.setSortingEnabled(True)
-
-        # following sorting is slower:
-        # self.tableWidget.sortItems(2, Qt.AscendingOrder)
 
     def selection_changed(self):
         if len(self.tableWidget.selectionModel().selectedRows()) > 0:
@@ -133,11 +130,11 @@ class EventNamesManager(QDialog, FORM_CLASS):
             self.selected_event_name = self.tableWidget.item(row_index, 3).text()
 
     def event_name_add(self):
-        name_new, okpressed = QInputDialog.getText(self, "New Event Name", "Event Name:", QLineEdit.Normal, "")
+        name_new, okpressed = QInputDialog.getText(self, "New Event Name", "Event Name:", QLineEdit.EchoMode.Normal, "")
         if not okpressed or name_new == '':
             return
         while self.name_exists(name_new):
-            name_new, okpressed = QInputDialog.getText(self, "New Event Name", "Event Name:", QLineEdit.Normal,
+            name_new, okpressed = QInputDialog.getText(self, "New Event Name", "Event Name:", QLineEdit.EchoMode.Normal,
                                                        name_new)
             if not okpressed or name_new == '':
                 return
@@ -145,29 +142,29 @@ class EventNamesManager(QDialog, FORM_CLASS):
             self.event_names_class.event_name_add(name_new)
         except Exception as error:
             # insertion error, e.g. user-defined not-null-fields
-            msg = QMessageBox(QMessageBox.Critical, "New Event Name", str(error), QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Name", str(error), QMessageBox.StandardButton.Ok)
+            msg.exec()
         self.event_names_get()
 
     def event_name_delete(self):
         if int(self.event_names_class.event_names_used[int(self.selected_event_id)]) > 0:
-            msg = QMessageBox(QMessageBox.Critical, "Delete Event Name",
-                              "Event Name is in use and can not be deleted.", QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Delete Event Name",
+                              "Event Name is in use and can not be deleted.", QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
         # check first for existing tour layers
         if self.event_class_type == "t":
             viewname = "v_" + self.event_class_name + "_" + self.selected_event_id
             if self.event_names_class.event_view_exists(viewname):
-                msg = QMessageBox(QMessageBox.Critical, "Delete Event Name",
-                                  "Tour layer exists, Event Name can not be deleted.", QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "Delete Event Name",
+                                  "Tour layer exists, Event Name can not be deleted.", QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
         self.event_names_class.event_name_delete(self.selected_event_id)
         self.event_names_get()
 
     def event_name_change(self):
-        name_new, okpressed = QInputDialog.getText(self, "Change Event Name", "Event Name:", QLineEdit.Normal,
+        name_new, okpressed = QInputDialog.getText(self, "Change Event Name", "Event Name:", QLineEdit.EchoMode.Normal,
                                                    self.selected_event_name)
         if not okpressed or name_new == '':
             return
@@ -180,9 +177,9 @@ class EventNamesManager(QDialog, FORM_CLASS):
         exists = False
         names_list = [val.lower() for val in self.event_names_class.event_names.values()]
         if name_new.lower() in names_list:
-            msg = QMessageBox(QMessageBox.Critical, "New Event Name", "Event Name already exists.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Name", "Event Name already exists.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             exists = True
         return exists
 

@@ -55,9 +55,9 @@ class NewEvent(QDialog, FORM_CLASS):
             return
         # check for spaces in class name
         if ' ' in self.le_event_class_name.text():
-            msg = QMessageBox(QMessageBox.Critical, "New Event Class", "No spaces in class names allowed.",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Class", "No spaces in class names allowed.",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
             return
 
         # option is not in use, set it 0

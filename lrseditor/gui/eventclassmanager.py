@@ -57,12 +57,12 @@ class EventClassManager(QDialog, FORM_CLASS):
         self.tableWidget.setHorizontalHeaderLabels(['Id', 'Type', 'Class Name'])
         self.header = self.tableWidget.horizontalHeader()
         # stretch columns
-        self.header.setSectionResizeMode(2, QHeaderView.Stretch)
+        self.header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         # select only one row
-        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # no editing
-        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         # config buttons
         self.pb_delete.setEnabled(False)
@@ -116,7 +116,7 @@ class EventClassManager(QDialog, FORM_CLASS):
             self.tableWidget.insertRow(row_position)
             iditem = QTableWidgetItem()
             # set numeric data for correct sorting
-            iditem.setData(Qt.DisplayRole, clid)
+            iditem.setData(Qt.ItemDataRole.DisplayRole, clid)
             self.tableWidget.setItem(row_position, 0, iditem)
             if self.lrs_event_classes.event_class_types[clid] == "p":
                 self.tableWidget.setItem(row_position, 1, QTableWidgetItem("Point Event Class"))
@@ -125,8 +125,8 @@ class EventClassManager(QDialog, FORM_CLASS):
             elif self.lrs_event_classes.event_class_types[clid] == "t":
                 self.tableWidget.setItem(row_position, 1, QTableWidgetItem("Tour Event Class"))
             self.tableWidget.setItem(row_position, 2, QTableWidgetItem(self.lrs_event_classes.event_class_names[clid]))
-        self.header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
         # enable sorting
         self.tableWidget.setSortingEnabled(True)
@@ -186,11 +186,11 @@ class EventClassManager(QDialog, FORM_CLASS):
             # check first for existing tour layers
             if self.pg_conn.view_exists(self.schema, "v_" + event_class_name + "_%"):
                 msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
+                msg.setIcon(QMessageBox.Icon.Information)
                 msg.setWindowTitle("Delete Event Class")
                 msg.setText("Remove all tour layers of Event Class '" + event_class_name + "' first.")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
 
             layer = qgis_utils.layer_by_tablename_get(self.schema, event_class_name)
@@ -199,39 +199,39 @@ class EventClassManager(QDialog, FORM_CLASS):
             layers_list.extend([v_layer, layer, layer_mt])
 
         modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ShiftModifier:
+        if modifiers == Qt.KeyboardModifier.ShiftModifier:
             # view must be in first position in layers_list
             if event_class_type != "p":
                 if layers_list[0] is None:
                     self.pg_conn.view_drop(self.schema, "v_" + event_class_name)
-                    msg = QMessageBox(QMessageBox.Information, "Drop View", "View 'v_" + event_class_name +
-                                      "' deleted.", QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Information, "Drop View", "View 'v_" + event_class_name +
+                                      "' deleted.", QMessageBox.StandardButton.Ok)
+                    msg.exec()
                 else:
-                    msg = QMessageBox(QMessageBox.Information, "Drop View", "Remove 'v_" + event_class_name +
-                                      "' first.", QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Information, "Drop View", "Remove 'v_" + event_class_name +
+                                      "' first.", QMessageBox.StandardButton.Ok)
+                    msg.exec()
         else:
             msg = QMessageBox()
             if all(layer is None for layer in layers_list):
-                msg.setIcon(QMessageBox.Question)
+                msg.setIcon(QMessageBox.Icon.Question)
                 msg.setWindowTitle("Delete Event Class")
                 msg.setText("Do you want to delete the Event Class '" + event_class_name + "'?")
-                msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                ret = msg.exec_()
-                if ret == QMessageBox.Ok:
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+                ret = msg.exec()
+                if ret == QMessageBox.StandardButton.Ok:
                     self.lrs_event_classes.event_class_delete(event_class_id)
                     self.event_classes_get()
             else:
-                msg.setIcon(QMessageBox.Information)
+                msg.setIcon(QMessageBox.Icon.Information)
                 msg.setWindowTitle("Delete Event Class")
                 msg.setText("Remove all layers of Event Class '" + event_class_name + "' first.")
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msg.exec()
 
     def event_class_create(self):
         modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ShiftModifier:
+        if modifiers == Qt.KeyboardModifier.ShiftModifier:
             row_values = self.selection_get()
             if row_values is not None:
                 event_class_type = row_values[1][0].lower()
@@ -243,26 +243,32 @@ class EventClassManager(QDialog, FORM_CLASS):
                     else:
                         self.pg_conn.tour_event_view_create(self.schema, event_class_name,
                                                             self.lrs_project.route_class_name, self.lrs_project.srid)
-                    msg = QMessageBox(QMessageBox.Information, "Create View", "View 'v_" + event_class_name +
-                                      "' created.", QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Information, "Create View", "View 'v_" + event_class_name +
+                                      "' created.", QMessageBox.StandardButton.Ok)
+                    msg.exec()
         else:
             dlg = NewEvent()
-            dlg.exec_()
+            dlg.exec()
             if not dlg.data_get():
                 return
             event_class_name, event_class_type, event_class_option = dlg.data_get()
+            if self.pg_conn.system_table_exists(event_class_name.lower()):
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Class", "Table name is identical to "
+                                                                                "system table name.",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
+                return
             if self.pg_conn.table_exists(self.schema, event_class_name.lower()):
-                msg = QMessageBox(QMessageBox.Critical, "New Event Class", "Table name already exists.",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Class", "Table name already exists.",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
 
             # for key, val in self.lrs_event_classes.event_class_names.items():
             #     if val.lower() == event_class_name.lower():
-            #         msg = QMessageBox(QMessageBox.Critical, "New Event Class", "Event Class Name already exists.",
-            #                           QMessageBox.Ok)
-            #         msg.exec_()
+            #         msg = QMessageBox(QMessageBox.Icon.Critical, "New Event Class", "Event Class Name already exists.",
+            #                           QMessageBox.StandardButton.Ok)
+            #         msg.exec()
             #         return
 
             self.lrs_event_classes.event_class_create(event_class_name, event_class_type, event_class_option,
@@ -276,7 +282,7 @@ class EventClassManager(QDialog, FORM_CLASS):
             event_class_name = row_values[2]
             dlg = ImportEvents(self.iface, self.pg_conn, self.schema, event_class_name, event_class_type)
             dlg.setWindowTitle("Import Events into '" + event_class_name + "'")
-            dlg.exec_()
+            dlg.exec()
 
     def event_class_layers_add(self):
         row_values = self.selection_get()
@@ -290,7 +296,7 @@ class EventClassManager(QDialog, FORM_CLASS):
                                "apprtstz", "createtstz", "changetstz", "geomtstz"], False)
             if event_class_type == "c" or event_class_type == "t":
                 modifiers = QApplication.keyboardModifiers()
-                if modifiers == Qt.ShiftModifier:
+                if modifiers == Qt.KeyboardModifier.ShiftModifier:
                     # view is readonly, no need to set fields readonly
                     self.layer_add("v_" + event_class_name, "geom", [], True)
                 else:
@@ -312,7 +318,7 @@ class EventClassManager(QDialog, FORM_CLASS):
                 self.layer_remove(event_class_name + "_bp")
             if event_class_type == "c" or event_class_type == "t":
                 modifiers = QApplication.keyboardModifiers()
-                if modifiers == Qt.ShiftModifier:
+                if modifiers == Qt.KeyboardModifier.ShiftModifier:
                     self.layer_remove("v_" + event_class_name)
                 else:
                     self.layer_remove(event_class_name)
@@ -331,18 +337,18 @@ class EventClassManager(QDialog, FORM_CLASS):
                                         self.lrs_project.srid)
         if layer is not None:
             if not layer.isValid():
-                msg = QMessageBox(QMessageBox.Critical, "Add Layer", "Layer " + name + " failed to load!",
-                                  QMessageBox.Ok)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Critical, "Add Layer", "Layer " + name + " failed to load!",
+                                  QMessageBox.StandardButton.Ok)
+                msg.exec()
                 return
             else:
                 qgis_utils.fields_readonly_set(layer, fields_readonly)
                 QgsProject.instance().addMapLayer(layer)
                 self.canvas.redrawAllLayers()
         else:
-            msg = QMessageBox(QMessageBox.Critical, "Add Layer", "Layer " + name + " failed to add!",
-                              QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Add Layer", "Layer " + name + " failed to add!",
+                              QMessageBox.StandardButton.Ok)
+            msg.exec()
 
     def tour_layer_add(self):
         row_values = self.selection_get()
@@ -352,7 +358,7 @@ class EventClassManager(QDialog, FORM_CLASS):
             dlg = TourLayerManager(self.iface, self.pg_conn, self.schema, self.lrs_project,
                                    event_names_class, self.entries, self.credentials)
             dlg.setWindowTitle("Add Tour as Layer from '" + event_class_name + "'")
-            dlg.exec_()
+            dlg.exec()
 
     def dialog_close(self):
         self.conn_close()

@@ -76,7 +76,7 @@ class ImportEvents(QDialog, FORM_CLASS):
         self.buttonBox.rejected.connect(self.rejected)
         self.buttonBox.rejected.disconnect()
         self.buttonBox.rejected.connect(self.rejected)
-        self.button_apply = self.buttonBox.button(QDialogButtonBox.Apply)
+        self.button_apply = self.buttonBox.button(QDialogButtonBox.StandardButton.Apply)
         self.button_apply.clicked.connect(self.apply)
         self.button_apply.setEnabled(False)
 
@@ -97,9 +97,9 @@ class ImportEvents(QDialog, FORM_CLASS):
         self.tableWidget.setHorizontalHeaderLabels(['Source Field', 'Target Field'])
         self.header = self.tableWidget.horizontalHeader()
         # stretch columns
-        self.header.setSectionResizeMode(0, QHeaderView.Stretch)
+        self.header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         # no editing
-        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
     def form_update(self):
         # fill combo boxes with table names
@@ -150,23 +150,23 @@ class ImportEvents(QDialog, FORM_CLASS):
                 if result and fieldname not in EXCLUDE_FIELDNAME:
                     textitem = QTableWidgetItem(fieldname)
                     self.tableWidget.setItem(row_position, 1, textitem)
-                    chkboxitem.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    chkboxitem.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
                 elif result and fieldname in EXCLUDE_FIELDNAME:
                     textitem = QTableWidgetItem("-- Locked --")
                     self.tableWidget.setItem(row_position, 1, textitem)
-                    chkboxitem.setFlags(Qt.NoItemFlags)
+                    chkboxitem.setFlags(Qt.ItemFlag.NoItemFlags)
                 else:
                     textitem = QTableWidgetItem("-- Not Available --")
                     self.tableWidget.setItem(row_position, 1, textitem)
-                    chkboxitem.setFlags(Qt.NoItemFlags)
-                chkboxitem.setCheckState(Qt.Unchecked)
+                    chkboxitem.setFlags(Qt.ItemFlag.NoItemFlags)
+                chkboxitem.setCheckState(Qt.CheckState.Unchecked)
                 self.tableWidget.setItem(row_position, 0, chkboxitem)
             if self.event_class_type == "t":
                 if (field_type == 'float') or (field_type == 'integer'):
                     self.cbx_sortnr.addItem(fieldname)
 
-        self.header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.tableWidget.setSelectionMode(QAbstractItemView.NoSelection)
+        self.header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         fields_geom = self.pg_conn_ip.fieldnames_geom_get(self.schema_ip, class_name)
         self.cbx_geom.clear()
@@ -177,7 +177,7 @@ class ImportEvents(QDialog, FORM_CLASS):
         dlg = DBSettings(self.iface, None)
         dlg.setWindowTitle("Database Connections")
         dlg.gbox_settings.setTitle("Database Settings")
-        dlg.exec_()
+        dlg.exec()
         if not dlg.data_get():
             return
         else:
@@ -215,9 +215,9 @@ class ImportEvents(QDialog, FORM_CLASS):
         self.route_class = LRSRouteClass(self.pg_conn, self.schema, self.lrs_project.route_class_name)
 
         if not self.pg_conn_ip.srid_find(self.schema_ip, self.class_name, self.geom_field) == self.srid:
-            msg = QMessageBox(QMessageBox.Information, "LRS-Editor", "SRID of class '" + self.class_name + "' "
-                              "does not match SRID of LRS-Project", QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information, "LRS-Editor", "SRID of class '" + self.class_name + "' "
+                              "does not match SRID of LRS-Project", QMessageBox.StandardButton.Ok)
+            msg.exec()
             self.textEdit.append("Import aborted.")
             return
 
@@ -228,12 +228,12 @@ class ImportEvents(QDialog, FORM_CLASS):
 
         self.fields = []
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 0).checkState() == Qt.Checked:
+            if self.tableWidget.item(i, 0).checkState() == Qt.CheckState.Checked:
                 fieldname = self.tableWidget.item(i, 0).text()
                 if not self.field_type_check(fieldname):
-                    msg = QMessageBox(QMessageBox.Information, "LRS-Editor", "Field Type of '" + fieldname + "' is "
-                                      "different in source and target. Import failed.", QMessageBox.Ok)
-                    msg.exec_()
+                    msg = QMessageBox(QMessageBox.Icon.Information, "LRS-Editor", "Field Type of '" + fieldname + "' is "
+                                      "different in source and target. Import failed.", QMessageBox.StandardButton.Ok)
+                    msg.exec()
                     self.textEdit.append("Import aborted.")
                     return
                 else:
@@ -278,11 +278,11 @@ class ImportEvents(QDialog, FORM_CLASS):
             return False
 
     def tables_truncate(self, tables_list):
-        msg = QMessageBox(QMessageBox.Question, "LRS-Editor", "Event Class '" + self.event_class_name +
+        msg = QMessageBox(QMessageBox.Icon.Question, "LRS-Editor", "Event Class '" + self.event_class_name +
                           "' is not empty. Do you want to remove all data first?",
-                          QMessageBox.Yes | QMessageBox.No)
-        ret = msg.exec_()
-        if ret == QMessageBox.Yes:
+                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        ret = msg.exec()
+        if ret == QMessageBox.StandardButton.Yes:
             self.textEdit.append("...Removing data of existing Event Class...")
             QApplication.processEvents()
             for tablename in tables_list:
@@ -298,9 +298,9 @@ class ImportEvents(QDialog, FORM_CLASS):
         layer_mt = qgis_utils.layer_by_tablename_get(self.schema, self.event_class_name + "_mt")
 
         if not layer_mt:
-            msg = QMessageBox(QMessageBox.Information, "LRS-Editor", "Layer '" + self.event_class_name + "_mt' is "
-                              "missing. Import failed.", QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information, "LRS-Editor", "Layer '" + self.event_class_name + "_mt' is "
+                              "missing. Import failed.", QMessageBox.StandardButton.Ok)
+            msg.exec()
             self.textEdit.append("Import aborted.")
             return
 
@@ -331,7 +331,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             if not self.tables_truncate([self.event_class_name, table_et_name, table_mt_name]):
                 return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         # insert event_names
         # get all unique event names
@@ -354,7 +354,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             route_name = route[0]
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
-                # route does not exists in routeclass
+                # route does not exist in routeclass
                 self.textEdit.append("...Route '" + route_name + "' not found...")
                 QApplication.processEvents()
                 continue
@@ -414,9 +414,9 @@ class ImportEvents(QDialog, FORM_CLASS):
         lrs_layer_bp = LRSBasePointEventClass(self.pg_conn, self.schema, layer_bp)
 
         if not layer_bp:
-            msg = QMessageBox(QMessageBox.Information, "LRS-Editor", "Layer '" + self.event_class_name + "_bp' is "
-                                                       "missing. Import failed.", QMessageBox.Ok)
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information, "LRS-Editor", "Layer '" + self.event_class_name + "_bp' is "
+                                                       "missing. Import failed.", QMessageBox.StandardButton.Ok)
+            msg.exec()
             self.textEdit.append("Import aborted.")
             return
 
@@ -439,7 +439,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             if not self.tables_truncate([self.event_class_name, lrs_layer_bp.event_class_name]):
                 return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         fields = ''.join((self.event_names_field, ", ", self.route_id_field, ", ",
                           "ST_AsText(" + self.geom_field + ")"))
         # add fields for the additional values to import
@@ -460,7 +460,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             route_name = event_point[1]
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
-                # route does not exists in routeclass
+                # route does not exist in routeclass
                 self.textEdit.append("...Route '" + route_name + "' not found...")
                 QApplication.processEvents()
                 continue
@@ -528,7 +528,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             if not self.tables_truncate([self.event_class_name, table_et_name]):
                 return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         # insert n/a and event_names
         # get all unique event names
@@ -553,7 +553,7 @@ class ImportEvents(QDialog, FORM_CLASS):
             route_name = route[0]
             route_id = self.route_class.route_id_get(route_name)
             if route_id is None:
-                # route does not exists in routeclass
+                # route does not exist in routeclass
                 self.textEdit.append("...Route '" + route_name + "' not found...")
                 QApplication.processEvents()
                 continue
@@ -695,12 +695,13 @@ class ImportEvents(QDialog, FORM_CLASS):
 
         QApplication.restoreOverrideCursor()
         if len(routeset_na) > 0:
-            msg = QMessageBox(QMessageBox.Question, "LRS-Editor", "There are Routes without Events. Do you want to set"
-                              " 'n/a' for these Routes?", QMessageBox.Yes | QMessageBox.No)
-            ret = msg.exec_()
-            if ret != QMessageBox.Yes:
+            msg = QMessageBox(QMessageBox.Icon.Question, "LRS-Editor", "There are Routes without Events. Do you want to set"
+                              " 'n/a' for these Routes?",
+                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            ret = msg.exec()
+            if ret != QMessageBox.StandardButton.Yes:
                 return
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         lrs_layer = LRSContEventClass(self.pg_conn, self.schema, layer)
         route_class = LRSRouteClass(self.pg_conn, self.schema, lrs_project.route_class_name)

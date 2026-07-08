@@ -91,7 +91,7 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
         # search function
         self.listWidget.clear()
         self.listWidget.addItems(self.event_names)
-        items = self.listWidget.findItems(value, Qt.MatchContains)
+        items = self.listWidget.findItems(value, Qt.MatchFlag.MatchContains)
         if items is not None:
             foundlist = [item.text() for item in items]
             self.listWidget.clear()
@@ -114,16 +114,16 @@ class EventNamesDockWidget(QDockWidget, FORM_CLASS):
         # catch IndexError, if in the map an event point is selected, which
         # event_name in listWidget does not exist
         try:
-            item = self.listWidget.findItems(event_name, Qt.MatchRegExp)[0]
+            item = self.listWidget.findItems(event_name, Qt.MatchFlag.MatchRegularExpression)[0]
         except IndexError:
             self.le_event_name.setText("")
-            item = self.listWidget.findItems(event_name, Qt.MatchRegExp)[0]
+            item = self.listWidget.findItems(event_name, Qt.MatchFlag.MatchRegularExpression)[0]
 
         # releases currentitem_changed():
         self.listWidget.setCurrentItem(item)
 
         # not required: item.setSelected(True)
-        self.listWidget.scrollToItem(item, QAbstractItemView.PositionAtTop)
+        self.listWidget.scrollToItem(item, QAbstractItemView.ScrollHint.PositionAtTop)
         self.listWidget.setFocus()
 
         # for x in range(self.listWidget.count()):
