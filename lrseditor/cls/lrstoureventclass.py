@@ -288,7 +288,7 @@ class LRSTourEventClass(LRSLayerClass):
 
     def events_withoutgeom_get(self):
         # no sql, get actual saved attribute values of the layer
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes(['event_id'], self.__layer_mt.fields())
         # use set for unique values
         event_uuid_used = set()
@@ -535,8 +535,7 @@ class LRSTourEventClass(LRSLayerClass):
 
     def __events_tour_get(self, event_id, route_id=None):
         # no sql, get actual saved attribute values of the layer
-        # return all values from _mt for a tour (depending of route_id)
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        # return all values from _mt for a tour (depending on route_id)        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes(['uuid', 'route_id', 'sortnr', 'frommeas', 'frompoint_id',
                                        'tomeas', 'topoint_id', 'routedir'], self.__layer_mt.fields())
         if route_id is None:
@@ -554,7 +553,7 @@ class LRSTourEventClass(LRSLayerClass):
     def __events_part_get(self, event_uuid):
         # no sql, get actual saved attribute values of the layer
         # return single value from _mt (tour part)
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes(['event_id', 'route_id', 'sortnr', 'frommeas', 'frompoint_id',
                                        'tomeas', 'topoint_id', 'routedir'], self.__layer_mt.fields())
         expression = "frompoint_id = \'" + event_uuid + "' OR topoint_id = \'" + event_uuid + "'"

@@ -38,7 +38,7 @@ class LRSLayerClass:
         return self.__layer.selectedFeatureCount()
 
     def feature_id_get(self, fieldname, value):
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes([fieldname], self.__layer.fields())
         if isinstance(value, str):
             expression = fieldname + " = \'" + value + "'"
@@ -49,7 +49,7 @@ class LRSLayerClass:
         return [s.id() for s in selection]
 
     def select_by_attribute_value(self, fieldname, value):
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes([fieldname], self.__layer.fields())
         if isinstance(value, str):
             expression = fieldname + " = \'" + value + "'"

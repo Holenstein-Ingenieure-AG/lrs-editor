@@ -220,7 +220,7 @@ class LRSPointEventClass(LRSLayerClass):
             self.__layer.updateExtents()
 
     def events_withoutgeom_get(self):
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoFlags)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoFlags)
         request.setSubsetOfAttributes(['name'], self.__layer.fields())
         selection = self.__layer.getFeatures(request)
         event_names_unused = [feat['name'] for feat in selection if not feat.hasGeometry()]

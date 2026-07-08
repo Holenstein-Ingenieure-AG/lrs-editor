@@ -37,7 +37,7 @@ class LRSContEventClass(LRSLayerClass):
 
     def events_get(self, route_id, reverse_order=False):
         # no sql, get actual saved attribute values of the layer
-        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
+        request = QgsFeatureRequest().setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes(['event_id', 'frommeas', 'tomeas'], self.__layer.fields())
         if isinstance(route_id, str):
             expression = "route_id = \'" + route_id + "'"
