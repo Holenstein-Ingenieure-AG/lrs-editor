@@ -17,10 +17,10 @@
  *                                                                         *
  ***************************************************************************/
 """
+from qgis.PyQt import QtGui
 from qgis.core import QgsProject, QgsSettings, QgsApplication, QgsAuthMethodConfig, QgsMapLayer, QgsDataSourceUri
 from qgis.core import QgsVectorLayer
 from qgis.gui import QgsVertexMarker
-from qgis.PyQt import QtGui
 
 SETTINGS_CONN_PATH = "PostgreSQL/connections/"
 
@@ -121,7 +121,7 @@ def credentials_get(connection_name):
 def layer_by_tablename_get(schema, tablename):
     maplayers = QgsProject.instance().mapLayers().values()
     for maplayer in maplayers:
-        if maplayer.isValid() and (maplayer.type() == QgsMapLayer.VectorLayer):
+        if maplayer.isValid() and (maplayer.type() == QgsMapLayer.LayerType.VectorLayer):
             searchstring = '"' + schema + '"."' + tablename + '"'
             if searchstring in maplayer.source():
                 return maplayer
@@ -130,7 +130,7 @@ def layer_by_tablename_get(schema, tablename):
 def tablename_by_layername_get(schema, layername):
     maplayers = QgsProject.instance().mapLayers().values()
     for maplayer in maplayers:
-        if maplayer.isValid() and (maplayer.type() == QgsMapLayer.VectorLayer):
+        if maplayer.isValid() and (maplayer.type() == QgsMapLayer.LayerType.VectorLayer):
             if maplayer.name == layername:
                 searchstring = 'table="' + schema + '".'
                 for spl in maplayer.source().split():
@@ -140,7 +140,7 @@ def tablename_by_layername_get(schema, layername):
 
 def layer_create(entries, credentials, layername, geomfield, readonly, srid, lrslayer=True):
     uri = QgsDataSourceUri()
-    uri.setConnection(entries[2], entries[4], entries[1], credentials[0], credentials[1], QgsDataSourceUri.SslDisable)
+    uri.setConnection(entries[2], entries[4], entries[1], credentials[0], credentials[1], QgsDataSourceUri.SslMode.SslDisable)
     # qgis needs an id-Field! (Important for views)
     uri.setDataSource(entries[3], layername, geomfield, "", "id")
     if geomfield is not None:
@@ -173,15 +173,15 @@ def qgis_point_get(canvas, mouse_event):
 
 def layer_select_by_rect(layer, rect, selection_behavior):
     if selection_behavior == "set":
-        selection_enum = QgsVectorLayer.SetSelection
+        selection_enum = QgsVectorLayer.SelectBehavior.SetSelection
     elif selection_behavior == "add":
-        selection_enum = QgsVectorLayer.AddToSelection
+        selection_enum = QgsVectorLayer.SelectBehavior.AddToSelection
     elif selection_behavior == "intersect":
-        selection_enum = QgsVectorLayer.IntersectSelection
+        selection_enum = QgsVectorLayer.SelectBehavior.IntersectSelection
     elif selection_behavior == "remove":
-        selection_enum = QgsVectorLayer.RemoveFromSelection
+        selection_enum = QgsVectorLayer.SelectBehavior.RemoveFromSelection
     else:
-        selection_enum = QgsVectorLayer.SetSelection
+        selection_enum = QgsVectorLayer.SelectBehavior.SetSelection
 
     layer.selectByRect(rect, selection_enum)
 
