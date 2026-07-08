@@ -238,14 +238,14 @@ class LRSEditorPlugin:
         self.layer_previous = None
 
         # connect to active layer
-        if layer is not None and layer.type() == QgsMapLayer.VectorLayer:
+        if layer is not None and layer.type() == QgsMapLayer.LayerType.VectorLayer:
             comment_type = self.comment_type_get()
             if comment_type == 1 or comment_type == 2 or comment_type == 4:
                 layer.editingStarted.connect(self.layerediting_started)
                 layer.editingStopped.connect(self.layerediting_stopped)
                 self.layer_previous = layer
 
-        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer):
+        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.LayerType.VectorLayer):
             self.__digitool.setEnabled(False)
             self.__movetool.setEnabled(False)
             self.__deletetool.setEnabled(False)
@@ -277,7 +277,8 @@ class LRSEditorPlugin:
 
     def layerediting_started(self):
         layer = self.iface.activeLayer()
-        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer) or not layer.isEditable():
+        if (layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.LayerType.VectorLayer)
+                or not layer.isEditable()):
             return
         comment_type = self.comment_type_get()
         # check if LRS-Layer
@@ -286,7 +287,7 @@ class LRSEditorPlugin:
             layers = QgsProject.instance().mapLayers().values()
             routeclasslayer = None
             for lay in layers:
-                if lay.isValid() and (lay.type() == QgsMapLayer.VectorLayer):
+                if lay.isValid() and (lay.type() == QgsMapLayer.LayerType.VectorLayer):
                     val = lay.dataComment()
                     if val == self.comment_types[0]:
                         routeclasslayer = lay
@@ -308,7 +309,7 @@ class LRSEditorPlugin:
             if comment_type == 1:
                 if isinstance(self.canvas.mapTool(), LRSMoveTool) or isinstance(self.canvas.mapTool(), LRSDigiTool):
                     self.__eventnamesdockwidget.form_update()
-                    self.iface.addDockWidget(Qt.RightDockWidgetArea, self.__eventnamesdockwidget)
+                    self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.__eventnamesdockwidget)
             else:
                 self.__eventnamesdockwidget.close()
 
@@ -331,7 +332,7 @@ class LRSEditorPlugin:
     def comment_type_get(self):
         layer = self.iface.activeLayer()
         comment_type = -1
-        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.VectorLayer):
+        if layer is None or not layer.isValid() or (layer.type() != QgsMapLayer.LayerType.VectorLayer):
             return comment_type
 
         val = layer.dataComment()
@@ -351,7 +352,7 @@ class LRSEditorPlugin:
         comment_type = self.comment_type_get()
         if comment_type == 1:
             self.__eventnamesdockwidget.form_update()
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.__eventnamesdockwidget)
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.__eventnamesdockwidget)
 
         self.canvas.setMapTool(self.digitool)
 
@@ -365,7 +366,7 @@ class LRSEditorPlugin:
         comment_type = self.comment_type_get()
         if comment_type == 1:
             self.__eventnamesdockwidget.form_update()
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.__eventnamesdockwidget)
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.__eventnamesdockwidget)
 
         self.canvas.setMapTool(self.movetool)
 
@@ -398,27 +399,27 @@ class LRSEditorPlugin:
             return
         if self.eventapprtool.approvable_check(False):
             self.__eventapprdockwidget.form_update()
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.__eventapprdockwidget)
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.__eventapprdockwidget)
 
     def project_dialog_show(self):
         dlg = ProjectSettings(self.iface)
-        dlg.exec_()
+        dlg.exec()
 
     def basesystem_dialog_show(self):
         dlg = BaseSystemSettings(self.iface)
-        dlg.exec_()
+        dlg.exec()
 
     def eventclassmanager_dialog_show(self):
         dlg = EventClassManager(self.iface)
-        dlg.exec_()
+        dlg.exec()
 
     def datacheck_dialog_show(self):
         dlg = DataCheck(self.iface)
-        dlg.exec_()
+        dlg.exec()
 
     def pointclass_create_dialog_show(self):
         dlg = PointClassCreate(self.iface)
-        dlg.exec_()
+        dlg.exec()
 
     def about_dialog_show(self):
         metadata_path = os.path.join(self.plugin_dir, "metadata.txt")
@@ -428,8 +429,8 @@ class LRSEditorPlugin:
         description_text = metadata_file.get('general', 'description')
 
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setTextFormat(Qt.RichText)
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setTextFormat(Qt.TextFormat.RichText)
         msg.setWindowTitle("About LRS-Editor")
         msg.setText(
             """<h2>{title}</h2>
@@ -446,5 +447,5 @@ class LRSEditorPlugin:
                        'github</a>.'
                     )
         )
-        msg.setStandardButtons(QMessageBox.Close)
-        msg.exec_()
+        msg.setStandardButtons(QMessageBox.StandardButton.Close)
+        msg.exec()
